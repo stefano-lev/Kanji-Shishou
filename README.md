@@ -1,3 +1,5 @@
+# Kanji Shishou
+
 # Kanji Study Utility (漢字師匠)
 
 A modern and interactive web application designed to help users study and master Japanese kanji effectively. This tool combines powerful features like flashcard quizzes, kanji dictionaries, and more to make kanji learning engaging and accessible.
@@ -13,6 +15,9 @@ A modern and interactive web application designed to help users study and master
 
 ![Screenshot 2](images/screenshot2.jpg)
 *Fully-functional and customizable Kanji Dictionary resource.*
+
+![Screenshot 2](images/screenshot3.jpg)
+*Multiple Choice Kanji Quiz.*
 
 ## Technologies
 This project is being built using:

@@ -10,8 +10,9 @@ const MultchoiceQuiz = () => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
-  const [percentageCorrect, setPercentageCorrect] = useState(0); // Moved to state
+  const [percentageCorrect, setPercentageCorrect] = useState(0);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   useEffect(() => {
     fetchKanjiData(selectedLevel);
@@ -34,7 +35,7 @@ const MultchoiceQuiz = () => {
     setQuizCompleted(false);
     setCorrectCount(0);
     setIncorrectCount(0);
-    setPercentageCorrect(0); // Reset percentage
+    setPercentageCorrect(0);
     setCurrentKanji(data[0]);
     generateChoices(data[0], data);
   };
@@ -71,7 +72,7 @@ const MultchoiceQuiz = () => {
     setTimeout(() => {
       nextRound();
       setIsButtonDisabled(false);
-    }, 500); // 0.5-second cooldown
+    }, 500);
   };
 
   const reAddKanjiToPool = (kanji) => {
@@ -103,7 +104,7 @@ const MultchoiceQuiz = () => {
     <div style={styles.container}>
       <h1 style={styles.heading}>Multiple Choice Quiz</h1>
       <div>
-        <label>Select JLPT Level:</label>
+        <label>Select JLPT Level: </label>
         <select value={selectedLevel} onChange={handleLevelChange}>
           <option value="5">JLPT N5</option>
           <option value="4">JLPT N4</option>
@@ -128,7 +129,7 @@ const MultchoiceQuiz = () => {
       ) : (
         currentKanji && (
           <div>
-            <h2 style={styles.round}>Round {currentRound + 1}</h2> {/* Centering fix */}
+            <h2 style={styles.round}>Round {currentRound + 1}</h2>
             <p style={styles.text}>
               Kun Readings:{" "}
               {currentKanji.reading_meaning.rmgroup.reading
@@ -151,7 +152,13 @@ const MultchoiceQuiz = () => {
               {choices.map((choice, index) => (
                 <button
                   key={index}
-                  style={styles.button}
+                  style={
+                    hoveredButton === index
+                      ? { ...styles.button, ...styles.buttonHover }
+                      : styles.button
+                  }
+                  onMouseEnter={() => setHoveredButton(index)}
+                  onMouseLeave={() => setHoveredButton(null)}
                   onClick={() => handleAnswer(choice)}
                   disabled={isButtonDisabled}
                 >
@@ -160,7 +167,12 @@ const MultchoiceQuiz = () => {
               ))}
             </div>
             {isCorrect !== null && (
-              <p style={{ color: isCorrect ? "green" : "red" }}>
+              <p
+                style={{
+                  ...styles.feedbackLabel,
+                  ...(isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect),
+                }}
+              >
                 {isCorrect ? "Correct!" : "Incorrect!"}
               </p>
             )}
@@ -181,7 +193,7 @@ const styles = {
     width: '100%',
     maxWidth: '800px',
     margin: '0 auto',
-    minHeight: '100vh',
+    minHeight: '70vh',
     backgroundColor: '#2e2e2e',
     borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
@@ -218,28 +230,34 @@ const styles = {
     marginTop: '20px',
   },
   button: {
-    margin: '10px',
-    padding: '12px 24px',
-    fontSize: '1.2rem',
-    backgroundColor: '#007BFF',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s ease',
+    margin: "10px",
+    padding: "12px 24px",
+    fontSize: "1.2rem",
+    backgroundColor: "#007BFF",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease",
   },
   buttonHover: {
-    backgroundColor: '#0056b3',
+    backgroundColor: "#0056b3",
   },
-  isCorrect: {
-    fontSize: '1.2rem',
-    fontWeight: 'bold',
+  feedbackLabel: {
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    textAlign: "center",
+    margin: "20px 0 10px",
+    minHeight: "30px",
+    visibility: "hidden",
   },
-  isCorrectGreen: {
-    color: 'green',
+  feedbackCorrect: {
+    color: "green",
+    visibility: "visible",
   },
-  isCorrectRed: {
-    color: 'red',
+  feedbackIncorrect: {
+    color: "red",
+    visibility: "visible",
   },
 };
 

@@ -7,6 +7,7 @@ const KanjiDictionary = () => {
   const [sortFilter, setSortFilter] = useState("0");
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   const fetchKanjiData = async (level) => {
     console.log(`[INFO] Fetching kanji data for JLPT Level ${level}...`);
@@ -37,20 +38,6 @@ const KanjiDictionary = () => {
     fetchKanjiData(selectedLevel);
   }, [selectedLevel]);
 
-  useEffect(() => {
-    const sortedData = [...kanjiData].sort((a, b) => {
-      if (sortFilter === "1") {
-        return a.misc.stroke_count - b.misc.stroke_count; // Sort by stroke count
-      } else if (sortFilter === "2") {
-        return a.misc.freq - b.misc.freq; // Sort by frequency
-      }
-      return a.id - b.id; // Default sort by ID
-    });
-    setKanjiData(sortedData);
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortFilter]);
-
   const handleKanjiClick = (kanji) => {
     setSelectedKanji(kanji);
     setIsOverlayVisible(true);
@@ -59,6 +46,14 @@ const KanjiDictionary = () => {
   const closeOverlay = () => {
     setIsOverlayVisible(false);
     setSelectedKanji(null);
+  };
+
+  const handleHover = (index) => {
+    setHoveredButton(index);
+  };
+
+  const handleHoverOut = () => {
+    setHoveredButton(null);
   };
 
   return (
@@ -100,8 +95,14 @@ const KanjiDictionary = () => {
           kanjiData.map((kanji, index) => (
             <button
               key={index}
-              style={styles.kanjiButton}
+              style={
+                hoveredButton === index
+                  ? { ...styles.kanjiButton, ...styles.kanjiButtonHover }
+                  : styles.kanjiButton
+              }
               onClick={() => handleKanjiClick(kanji)}
+              onMouseEnter={() => handleHover(index)}
+              onMouseLeave={handleHoverOut}
             >
               {kanji.literal || "No Kanji"}
               <div style={styles.kanjiId}>#{kanji.id}</div>
@@ -125,12 +126,16 @@ const KanjiDictionary = () => {
             <p>ID: {selectedKanji.id}</p>
             <p>Stroke Count: {selectedKanji.misc.stroke_count}</p>
             <p>Frequency: {selectedKanji.misc.freq}</p>
-            <p>Kun Readings: {selectedKanji.reading_meaning.rmgroup.reading.filter(r => r["@r_type"] === "ja_kun")
-              .map(r => r["#text"]).join(", ") || "None"}</p>
-            <p>On Readings: {selectedKanji.reading_meaning.rmgroup.reading.filter(r => r["@r_type"] === "ja_on")
-              .map(r => r["#text"]).join(", ") || "None"}</p>
-            <p>Meanings: {selectedKanji.reading_meaning.rmgroup.meaning?.join(", ") || "None"}</p>
-            <button onClick={closeOverlay} style={styles.closeButton}>
+            <button
+              onClick={closeOverlay}
+              style={
+                hoveredButton === "close"
+                  ? { ...styles.closeButton, ...styles.closeButtonHover }
+                  : styles.closeButton
+              }
+              onMouseEnter={() => setHoveredButton("close")}
+              onMouseLeave={() => setHoveredButton(null)}
+            >
               Close
             </button>
           </div>
@@ -142,33 +147,33 @@ const KanjiDictionary = () => {
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '20px',
-    width: '100%',
-    maxWidth: '800px',
-    margin: '0 auto',
-    minHeight: '100vh',
-    boxSizing: 'border-box',
-    backgroundColor: '#444444',
-    color: '#e0e0e0',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0)',
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "20px",
+    width: "100%",
+    maxWidth: "800px",
+    margin: "0 auto",
+    minHeight: "100vh",
+    boxSizing: "border-box",
+    backgroundColor: "#333",
+    color: "#e0e0e0",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   },
   heading: {
     fontSize: "2rem",
     marginBottom: "20px",
-    color: '#fff',
+    color: "#fff",
   },
   select: {
     margin: "0 10px",
     padding: "5px",
     fontSize: "1rem",
-    backgroundColor: '#333',
-    color: '#fff',
-    border: '1px solid #555',
-    borderRadius: '5px',
+    backgroundColor: "#333",
+    color: "#fff",
+    border: "1px solid #555",
+    borderRadius: "5px",
   },
   gridContainer: {
     display: "grid",
@@ -177,13 +182,14 @@ const styles = {
     padding: "20px",
     width: "100%",
     maxWidth: "800px",
+    backgroundColor: "#333",
   },
   kanjiButton: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
-    backgroundColor: "#333",
+    backgroundColor: "#444",
     borderRadius: "5px",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
     padding: "10px",
@@ -194,12 +200,12 @@ const styles = {
     width: "100px",
     border: "none",
     cursor: "pointer",
-    transition: 'all 0.3s ease',
     color: "#e0e0e0",
+    transition: "all 0.3s ease",
   },
   kanjiButtonHover: {
-    backgroundColor: '#f7a61e',
-    color: '#fff',
+    backgroundColor: "#0056b3",
+    color: "#fff",
   },
   kanjiId: {
     position: "absolute",
@@ -236,7 +242,7 @@ const styles = {
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
-    transition: 'all 0.3s ease',
+    transition: "all 0.3s ease",
   },
   closeButtonHover: {
     backgroundColor: "#c9302c",

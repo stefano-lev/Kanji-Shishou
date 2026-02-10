@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from 'react';
+
+import jlpt5 from '../data/jlpt_level_5.json';
+import jlpt4 from '../data/jlpt_level_4.json';
+import jlpt3 from '../data/jlpt_level_3.json';
+import jlpt2 from '../data/jlpt_level_2.json';
+import jlpt1 from '../data/jlpt_level_1.json';
 
 const MultchoiceQuiz = () => {
   const [kanjiData, setKanjiData] = useState([]);
-  const [selectedLevel, setSelectedLevel] = useState("5");
+  const [selectedLevel, setSelectedLevel] = useState('5');
   const [currentKanji, setCurrentKanji] = useState(null);
   const [choices, setChoices] = useState([]);
   const [isCorrect, setIsCorrect] = useState(null);
@@ -14,23 +20,24 @@ const MultchoiceQuiz = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [hoveredButton, setHoveredButton] = useState(null);
 
-  useEffect(() => {
-    fetchKanjiData(selectedLevel);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLevel]);
-
-  const fetchKanjiData = async (level) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/kanji/${level}`);
-      const data = await response.json();
-      setKanjiData(data);
-      if (data.length > 0) startQuiz(data);
-    } catch (error) {
-      console.error("Error fetching kanji data:", error);
+  const getKanjiByLevel = (level) => {
+    switch (level) {
+      case '5':
+        return jlpt5;
+      case '4':
+        return jlpt4;
+      case '3':
+        return jlpt3;
+      case '2':
+        return jlpt2;
+      case '1':
+        return jlpt1;
+      default:
+        return [];
     }
   };
 
-  const startQuiz = (data) => {
+  const startQuiz = useCallback((data) => {
     setCurrentRound(0);
     setQuizCompleted(false);
     setCorrectCount(0);
@@ -38,7 +45,13 @@ const MultchoiceQuiz = () => {
     setPercentageCorrect(0);
     setCurrentKanji(data[0]);
     generateChoices(data[0], data);
-  };
+  }, []);
+
+  useEffect(() => {
+    const data = getKanjiByLevel(selectedLevel);
+    setKanjiData(data);
+    if (data.length > 0) startQuiz(data);
+  }, [selectedLevel, startQuiz]);
 
   const generateChoices = (correctKanji, allKanji) => {
     const randomChoices = allKanji
@@ -66,7 +79,9 @@ const MultchoiceQuiz = () => {
     }
 
     const answeredRounds = currentRound + 1;
-    const newPercentageCorrect = Math.round(((correctCount + (correct ? 1 : 0)) / answeredRounds) * 100) || 0;
+    const newPercentageCorrect =
+      Math.round(((correctCount + (correct ? 1 : 0)) / answeredRounds) * 100) ||
+      0;
     setPercentageCorrect(newPercentageCorrect); // Update percentage only after answering
 
     setTimeout(() => {
@@ -115,11 +130,10 @@ const MultchoiceQuiz = () => {
       </div>
       <div style={styles.counter}>
         <p>
-          Correct: {correctCount} | Incorrect: {incorrectCount} | Total Cards: {totalRounds}
+          Correct: {correctCount} | Incorrect: {incorrectCount} | Total Cards:{' '}
+          {totalRounds}
         </p>
-        <p>
-          Percentage Correct: {percentageCorrect}%
-        </p>
+        <p>Percentage Correct: {percentageCorrect}%</p>
       </div>
       {quizCompleted ? (
         <div>
@@ -132,26 +146,27 @@ const MultchoiceQuiz = () => {
             <h2 style={styles.round}>Round {currentRound + 1}</h2>
             <div style={styles.cardSection}>
               <p style={styles.text}>
-                Kun-yomi:{" "}
+                Kun-yomi:{' '}
                 {currentKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r["@r_type"] === "ja_kun")
-                  .map((r) => r["#text"])
-                  .join(", ") || "None"}
+                  .filter((r) => r['@r_type'] === 'ja_kun')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
               </p>
             </div>
             <div style={styles.cardSection}>
               <p style={styles.text}>
-                On-yomi:{" "}
+                On-yomi:{' '}
                 {currentKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r["@r_type"] === "ja_on")
-                  .map((r) => r["#text"])
-                  .join(", ") || "None"}
+                  .filter((r) => r['@r_type'] === 'ja_on')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
               </p>
             </div>
             <div style={styles.cardSection}>
               <p style={styles.text}>
-                Meanings:{" "}
-                {currentKanji.reading_meaning.rmgroup.meaning?.join(", ") || "None"}
+                Meanings:{' '}
+                {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                  'None'}
               </p>
             </div>
             <div style={styles.choices}>
@@ -176,10 +191,12 @@ const MultchoiceQuiz = () => {
               <p
                 style={{
                   ...styles.feedbackLabel,
-                  ...(isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect),
+                  ...(isCorrect
+                    ? styles.feedbackCorrect
+                    : styles.feedbackIncorrect),
                 }}
               >
-                {isCorrect ? "Correct!" : "Incorrect!"}
+                {isCorrect ? 'Correct!' : 'Incorrect!'}
               </p>
             )}
           </div>
@@ -246,36 +263,35 @@ const styles = {
     marginTop: '20px',
   },
   button: {
-    margin: "10px",
-    padding: "12px 24px",
-    fontSize: "1.2rem",
-    backgroundColor: "#007BFF",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    transition: "background-color 0.3s ease",
+    margin: '10px',
+    padding: '12px 24px',
+    fontSize: '1.2rem',
+    backgroundColor: '#007BFF',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
   },
   buttonHover: {
-    backgroundColor: "#0056b3",
+    backgroundColor: '#0056b3',
   },
   feedbackLabel: {
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    textAlign: "center",
-    margin: "20px 0 10px",
-    minHeight: "30px",
-    visibility: "hidden",
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    margin: '20px 0 10px',
+    minHeight: '30px',
+    visibility: 'hidden',
   },
   feedbackCorrect: {
-    color: "green",
-    visibility: "visible",
+    color: 'green',
+    visibility: 'visible',
   },
   feedbackIncorrect: {
-    color: "red",
-    visibility: "visible",
+    color: 'red',
+    visibility: 'visible',
   },
 };
-
 
 export default MultchoiceQuiz;

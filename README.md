@@ -12,13 +12,13 @@ An interactive web app designed to help users study and master Japanese kanji ef
 
 ## Screenshots
 
-![Screenshot 1](backend/images/screenshot1.jpg)
+![Screenshot 1](public/images/screenshot1.jpg)
 _Demonstration of the basic flashcard functionality._
 
-![Screenshot 2](backend/images/screenshot2.jpg)
+![Screenshot 2](public/images/screenshot2.jpg)
 _Fully-functional and customizable Kanji Dictionary resource._
 
-![Screenshot 2](backend/images/screenshot3.jpg)
+![Screenshot 2](public/images/screenshot3.jpg)
 _Multiple Choice Kanji Quiz._
 
 ## Technologies

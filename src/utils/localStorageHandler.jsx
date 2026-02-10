@@ -1,5 +1,5 @@
-const LOCAL_STORAGE_KEY = "kanjiStats";
-const FAVORITES_KEY = "favorites";
+const LOCAL_STORAGE_KEY = 'kanjiStats';
+const FAVORITES_KEY = 'favorites';
 
 export const saveKanjiStats = (data) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
@@ -10,9 +10,12 @@ export const getKanjiStats = () => {
   return data ? JSON.parse(data) : null;
 };
 
-export const updateKanji = (kanji, updatedData) => {
+export const updateKanji = (kanjiId, updatedData) => {
   const currentStats = getKanjiStats() || {};
-  currentStats[kanji] = { ...currentStats[kanji], ...updatedData };
+  currentStats[kanjiId] = {
+    ...(currentStats[kanjiId] || {}),
+    ...updatedData,
+  };
   saveKanjiStats(currentStats);
 };
 

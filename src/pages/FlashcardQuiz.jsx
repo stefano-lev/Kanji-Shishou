@@ -1,46 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+
+import jlpt5 from '../data/jlpt_level_5.json';
+import jlpt4 from '../data/jlpt_level_4.json';
+import jlpt3 from '../data/jlpt_level_3.json';
+import jlpt2 from '../data/jlpt_level_2.json';
+import jlpt1 from '../data/jlpt_level_1.json';
 
 const FlashcardQuiz = () => {
   const [currentKanjiIndex, setCurrentKanjiIndex] = useState(0);
   const [kanjiData, setKanjiData] = useState([]);
   const [currentKanji, setCurrentKanji] = useState(null);
-  const [selectedLevel, setSelectedLevel] = useState("5");
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState('5');
+  //const [isLoading, setIsLoading] = useState(false);
+
+  const getKanjiByLevel = (level) => {
+    switch (level) {
+      case '5':
+        return jlpt5;
+      case '4':
+        return jlpt4;
+      case '3':
+        return jlpt3;
+      case '2':
+        return jlpt2;
+      case '1':
+        return jlpt1;
+      default:
+        return [];
+    }
+  };
 
   useEffect(() => {
-    fetchKanjiData(selectedLevel).catch((error) => console.error("Error in useEffect:", error));
+    const data = getKanjiByLevel(selectedLevel);
+    setKanjiData(data);
+    setCurrentKanjiIndex(0);
+    setCurrentKanji(data[0] || null);
   }, [selectedLevel]);
-  
-
-  const fetchKanjiData = async (level) => {
-    console.log(`[INFO] Fetching kanji data for JLPT Level ${level}...`);
-    setIsLoading(true);
-  
-    try {
-      const response = await fetch(`http://localhost:5000/api/kanji/${level}`);
-      if (response.ok) {
-        console.log(`[INFO] Successfully fetched data for JLPT Level ${level}`);
-        const data = await response.json();
-  
-        if (data.length > 0) {
-          console.log(`[INFO] Loaded ${data.length} kanji for JLPT Level ${level}`);
-          setKanjiData(data);
-          setCurrentKanji(data[0]);
-        } else {
-          console.warn(`[WARN] No kanji data available for JLPT Level ${level}`);
-          alert("No kanji data available for the selected level.");
-        }
-      } else {
-        console.error(`[ERROR] Failed to fetch data for JLPT Level ${level}. Response:`, response);
-        alert("Failed to load kanji data.");
-      }
-    } catch (error) {
-      console.error(`[ERROR] Network error fetching data for JLPT Level ${level}:`, error);
-      alert("An error occurred while fetching kanji data.");
-    } finally {
-      setIsLoading(false);
-    }
-  };  
 
   const handleQuizProgress = () => {
     const nextIndex = (currentKanjiIndex + 1) % kanjiData.length;
@@ -48,9 +43,9 @@ const FlashcardQuiz = () => {
     setCurrentKanji(kanjiData[nextIndex]);
   };
 
-  if (isLoading) {
-    //return <div>Loading kanji data...</div>;
-  }
+  //if (isLoading) {
+  //return <div>Loading kanji data...</div>;
+  //}
 
   return (
     <div style={styles.container}>
@@ -69,10 +64,7 @@ const FlashcardQuiz = () => {
           <option value="2">JLPT Level N2</option>
           <option value="1">JLPT Level N1</option>
         </select>
-        <button
-          style={styles.button}
-          onClick={handleQuizProgress}
-        >
+        <button style={styles.button} onClick={handleQuizProgress}>
           Next Card
         </button>
       </div>
@@ -83,22 +75,36 @@ const FlashcardQuiz = () => {
         <div style={styles.kanjiCard}>
           <div style={styles.cardSection}>
             <div style={styles.kanjiLiteral}>
-              <h2>{currentKanji.literal || "No Kanji"}</h2>
+              <h2>{currentKanji.literal || 'No Kanji'}</h2>
             </div>
           </div>
 
           <div style={styles.cardSection}>
-          <p>Kun Readings: {currentKanji.reading_meaning.rmgroup.reading.filter(r => r["@r_type"] === "ja_kun")
-            .map(r => r["#text"]).join(", ") || "None"}</p>
+            <p>
+              Kun Readings:{' '}
+              {currentKanji.reading_meaning.rmgroup.reading
+                .filter((r) => r['@r_type'] === 'ja_kun')
+                .map((r) => r['#text'])
+                .join(', ') || 'None'}
+            </p>
           </div>
 
           <div style={styles.cardSection}>
-          <p>On Readings: {currentKanji.reading_meaning.rmgroup.reading.filter(r => r["@r_type"] === "ja_on")
-          .map(r => r["#text"]).join(", ") || "None"}</p>
+            <p>
+              On Readings:{' '}
+              {currentKanji.reading_meaning.rmgroup.reading
+                .filter((r) => r['@r_type'] === 'ja_on')
+                .map((r) => r['#text'])
+                .join(', ') || 'None'}
+            </p>
           </div>
-          
+
           <div style={styles.cardSection}>
-          <p>Meanings: {currentKanji.reading_meaning.rmgroup.meaning?.join(", ") || "None"}</p>
+            <p>
+              Meanings:{' '}
+              {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                'None'}
+            </p>
           </div>
         </div>
       ) : (
@@ -204,6 +210,5 @@ const styles = {
     color: '#e0e0e0',
   },
 };
-
 
 export default FlashcardQuiz;

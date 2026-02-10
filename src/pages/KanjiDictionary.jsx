@@ -1,57 +1,60 @@
-import { useEffect, useState } from "react";
-import * as storageHandler from "../utils/localStorageHandler";
+import { useEffect, useState } from 'react';
+import * as storageHandler from '../utils/localStorageHandler';
 
+import jlpt5 from '../data/jlpt_level_5.json';
+import jlpt4 from '../data/jlpt_level_4.json';
+import jlpt3 from '../data/jlpt_level_3.json';
+import jlpt2 from '../data/jlpt_level_2.json';
+import jlpt1 from '../data/jlpt_level_1.json';
 
 const KanjiDictionary = () => {
   const [kanjiData, setKanjiData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState("0");
-  const [sortFilter, setSortFilter] = useState("0");
+  const [selectedLevel, setSelectedLevel] = useState('0');
+  const [sortFilter, setSortFilter] = useState('0');
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [filterFavorites, setFilterFavorites] = useState(false);
 
-  const fetchKanjiData = async (level, filterFavorites) => {
-    console.log(`[INFO] Fetching kanji data for JLPT Level ${level}...`);
-    setIsLoading(true);
-
-    try {
-      const url =
-        level === "0"
-          ? `http://localhost:5000/api/kanji/all`
-          : `http://localhost:5000/api/kanji/${level}`;
-      const response = await fetch(url);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (filterFavorites === true) {
-          const filteredData = data.filter((kanji) => favorites.includes(kanji.id));
-          setKanjiData(filteredData);
-        } else {
-          setKanjiData(data);
-        }
-      } else {
-        alert("Failed to load kanji data.");
-      }
-    } catch (error) {
-      console.error("Error fetching kanji data:", error);
-      alert("An error occurred while fetching kanji data.");
-    } finally {
-      setIsLoading(false);
+  const getKanjiByLevel = (level) => {
+    switch (level) {
+      case '5':
+        return jlpt5;
+      case '4':
+        return jlpt4;
+      case '3':
+        return jlpt3;
+      case '2':
+        return jlpt2;
+      case '1':
+        return jlpt1;
+      case '0':
+        return [...jlpt5, ...jlpt4, ...jlpt3, ...jlpt2, ...jlpt1];
+      default:
+        return [];
     }
   };
 
   useEffect(() => {
-    fetchKanjiData(selectedLevel, filterFavorites);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLevel, filterFavorites]);
+    setIsLoading(true);
+
+    let data = getKanjiByLevel(selectedLevel);
+
+    if (filterFavorites) {
+      data = data.filter((k) => favorites.includes(k.id));
+    }
+
+    setKanjiData(data);
+    setIsLoading(false);
+  }, [selectedLevel, filterFavorites, favorites]);
 
   useEffect(() => {
     const savedFavorites = storageHandler.getFavorites() || [];
+
     setFavorites(savedFavorites);
-    console.log("Loaded Favorites: ", savedFavorites)
+    console.log('Loaded Favorites: ', savedFavorites);
   }, []);
 
   const handleKanjiClick = (kanji) => {
@@ -65,14 +68,14 @@ const KanjiDictionary = () => {
   };
 
   const toggleFavorite = (kanji) => {
-    console.log("toggleFavorite", kanji.id)
+    console.log('toggleFavorite', kanji.id);
     const updatedFavorites = favorites.includes(kanji.id)
       ? favorites.filter((id) => id !== kanji.id)
       : [...favorites, kanji.id];
-    
-    setFavorites(updatedFavorites)
-    storageHandler.saveFavorites(updatedFavorites)
-  }
+
+    setFavorites(updatedFavorites);
+    storageHandler.saveFavorites(updatedFavorites);
+  };
 
   const handleHover = (index) => {
     setHoveredButton(index);
@@ -84,7 +87,7 @@ const KanjiDictionary = () => {
 
   const toggleFilterFavorites = () => {
     setFilterFavorites((prev) => !prev);
-  }
+  };
 
   return (
     <div style={styles.container}>
@@ -123,12 +126,14 @@ const KanjiDictionary = () => {
           style={{
             ...styles.favoritesButton,
             ...(filterFavorites ? styles.favoritesButtonEnabled : {}),
-            ...(hoveredButton === "filterfavorites" ? styles.favoritesButtonHover : {}),
+            ...(hoveredButton === 'filterfavorites'
+              ? styles.favoritesButtonHover
+              : {}),
           }}
-          onMouseEnter={() => setHoveredButton("filterfavorites")}
+          onMouseEnter={() => setHoveredButton('filterfavorites')}
           onMouseLeave={() => setHoveredButton(null)}
         >
-          {"★"}
+          {'★'}
         </button>
       </div>
 
@@ -148,7 +153,7 @@ const KanjiDictionary = () => {
               onMouseEnter={() => handleHover(index)}
               onMouseLeave={handleHoverOut}
             >
-              {kanji.literal || "No Kanji"}
+              {kanji.literal || 'No Kanji'}
               <div style={styles.kanjiId}>#{kanji.id}</div>
             </button>
           ))
@@ -170,24 +175,33 @@ const KanjiDictionary = () => {
             <p>ID: {selectedKanji.id}</p>
             <p>Stroke Count: {selectedKanji.misc.stroke_count}</p>
             <p>Frequency: {selectedKanji.misc.freq}</p>
-            <p>Meanings: {selectedKanji.reading_meaning.rmgroup.meaning
-                  ?.join(", ") || "None"}</p>
-            <p>Kun-yomi: {selectedKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r["@r_type"] === "ja_kun")
-                  .map((r) => r["#text"])
-                  .join(", ") || "None"}</p>
-            <p>On-yomi: {selectedKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r["@r_type"] === "ja_on")
-                  .map((r) => r["#text"])
-                  .join(", ") || "None"}</p>
+            <p>
+              Meanings:{' '}
+              {selectedKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                'None'}
+            </p>
+            <p>
+              Kun-yomi:{' '}
+              {selectedKanji.reading_meaning.rmgroup.reading
+                .filter((r) => r['@r_type'] === 'ja_kun')
+                .map((r) => r['#text'])
+                .join(', ') || 'None'}
+            </p>
+            <p>
+              On-yomi:{' '}
+              {selectedKanji.reading_meaning.rmgroup.reading
+                .filter((r) => r['@r_type'] === 'ja_on')
+                .map((r) => r['#text'])
+                .join(', ') || 'None'}
+            </p>
             <button
               onClick={closeOverlay}
               style={
-                hoveredButton === "close"
+                hoveredButton === 'close'
                   ? { ...styles.closeButton, ...styles.closeButtonHover }
                   : styles.closeButton
               }
-              onMouseEnter={() => setHoveredButton("close")}
+              onMouseEnter={() => setHoveredButton('close')}
               onMouseLeave={() => setHoveredButton(null)}
             >
               Close
@@ -197,13 +211,15 @@ const KanjiDictionary = () => {
               onClick={() => toggleFavorite(selectedKanji)}
               style={{
                 ...styles.heartButton,
-                ...(favorites.includes(selectedKanji.id) ? styles.heartButtonFavorited : {}),
-                ...(hoveredButton === "heart" ? styles.heartButtonHover : {}),
+                ...(favorites.includes(selectedKanji.id)
+                  ? styles.heartButtonFavorited
+                  : {}),
+                ...(hoveredButton === 'heart' ? styles.heartButtonHover : {}),
               }}
-              onMouseEnter={() => setHoveredButton("heart")}
+              onMouseEnter={() => setHoveredButton('heart')}
               onMouseLeave={() => setHoveredButton(null)}
             >
-              {favorites.includes(selectedKanji.id) ? "❤️" : "🖤"}
+              {favorites.includes(selectedKanji.id) ? '❤️' : '🖤'}
             </button>
           </div>
         </div>
@@ -214,42 +230,42 @@ const KanjiDictionary = () => {
 
 const styles = {
   container: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    padding: "20px",
-    width: "100%",
-    maxWidth: "800px",
-    margin: "0 auto",
-    minHeight: "100vh",
-    boxSizing: "border-box",
-    backgroundColor: "#333",
-    color: "#e0e0e0",
-    borderRadius: "8px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '20px',
+    width: '100%',
+    maxWidth: '800px',
+    margin: '0 auto',
+    minHeight: '100vh',
+    boxSizing: 'border-box',
+    backgroundColor: '#333',
+    color: '#e0e0e0',
+    borderRadius: '8px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   },
   heading: {
-    fontSize: "2rem",
-    marginBottom: "20px",
-    color: "#fff",
+    fontSize: '2rem',
+    marginBottom: '20px',
+    color: '#fff',
   },
   select: {
-    margin: "0 10px",
-    padding: "5px",
-    fontSize: "1rem",
-    backgroundColor: "#333",
-    color: "#fff",
-    border: "1px solid #555",
-    borderRadius: "5px",
+    margin: '0 10px',
+    padding: '5px',
+    fontSize: '1rem',
+    backgroundColor: '#333',
+    color: '#fff',
+    border: '1px solid #555',
+    borderRadius: '5px',
   },
   gridContainer: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-    gap: "10px",
-    padding: "20px",
-    width: "100%",
-    maxWidth: "800px",
-    backgroundColor: "#333",
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+    gap: '10px',
+    padding: '20px',
+    width: '100%',
+    maxWidth: '800px',
+    backgroundColor: '#333',
   },
   cardSection: {
     width: 'auto',
@@ -262,98 +278,98 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
   },
   kanjiButton: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    backgroundColor: "#444",
-    borderRadius: "5px",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    padding: "10px",
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    textAlign: "center",
-    height: "100px",
-    width: "100px",
-    border: "none",
-    cursor: "pointer",
-    color: "#e0e0e0",
-    transition: "all 0.3s ease",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    backgroundColor: '#444',
+    borderRadius: '5px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    padding: '10px',
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    height: '100px',
+    width: '100px',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#e0e0e0',
+    transition: 'all 0.3s ease',
   },
   kanjiButtonHover: {
-    backgroundColor: "#0056b3",
-    color: "#fff",
-    transform: "scale(1.05)",
+    backgroundColor: '#0056b3',
+    color: '#fff',
+    transform: 'scale(1.05)',
   },
   kanjiId: {
-    position: "absolute",
-    bottom: "5px",
-    right: "12px",
-    fontSize: "0.75rem",
-    color: "#ccc",
+    position: 'absolute',
+    bottom: '5px',
+    right: '12px',
+    fontSize: '0.75rem',
+    color: '#ccc',
   },
   overlay: {
-    position: "fixed",
+    position: 'fixed',
     top: 0,
     left: 0,
-    width: "100vw",
-    height: "100vh",
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   overlayContent: {
-    backgroundColor: "#333",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 4px 8px rgba(255, 255, 255, 0.1)",
-    textAlign: "center",
-    width: "300px",
-    color: "#e0e0e0",
+    backgroundColor: '#333',
+    padding: '20px',
+    borderRadius: '10px',
+    boxShadow: '0 4px 8px rgba(255, 255, 255, 0.1)',
+    textAlign: 'center',
+    width: '300px',
+    color: '#e0e0e0',
   },
   closeButton: {
-    marginTop: "10px",
-    padding: "5px 10px",
-    backgroundColor: "#d9534f",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    transition: "all 0.3s ease",
+    marginTop: '10px',
+    padding: '5px 10px',
+    backgroundColor: '#d9534f',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
   },
   closeButtonHover: {
-    backgroundColor: "#c9302c",
+    backgroundColor: '#c9302c',
   },
   heartButton: {
-    backgroundColor: "transparent",
-    border: "none",
-    fontSize: "1.5rem",
-    cursor: "pointer",
-    transition: "transform 0.2s ease, color 0.2s ease",
-    color: "#e0e0e0",
+    backgroundColor: 'transparent',
+    border: 'none',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, color 0.2s ease',
+    color: '#e0e0e0',
   },
   heartButtonHover: {
-    transform: "scale(1.1)",
-    color: "#ff6666",
+    transform: 'scale(1.1)',
+    color: '#ff6666',
   },
   heartButtonFavorited: {
-    color: "#ff4d4d",
+    color: '#ff4d4d',
   },
   favoritesButton: {
-    backgroundColor: "transparent",
-    border: "none",
-    fontSize: "1.5rem",
-    cursor: "pointer",
-    transition: "transform 0.2s ease, color 0.2s ease",
-    color: "#e0e0e0",
+    backgroundColor: 'transparent',
+    border: 'none',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, color 0.2s ease',
+    color: '#e0e0e0',
   },
   favoritesButtonHover: {
-    transform: "scale(1.4)",
-    color: "#0056b3",
+    transform: 'scale(1.4)',
+    color: '#0056b3',
   },
   favoritesButtonEnabled: {
-    color: "#0056b3",
+    color: '#0056b3',
   },
 };
 

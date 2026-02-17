@@ -11,7 +11,7 @@ const KanjiGrid = React.memo(function KanjiGrid({ kanjiData, onSelect }) {
   console.log('Grid rendered');
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-aut px-8">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto px-8">
       {kanjiData.map((kanji) => (
         <button
           key={kanji.uid}

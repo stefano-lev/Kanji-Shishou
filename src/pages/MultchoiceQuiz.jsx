@@ -5,9 +5,16 @@ import { kanjiByLevel } from '../data/kanjiData';
 
 import { recordResult } from '../utils/statsHandler';
 
+import {
+  loadSession,
+  saveSession,
+  clearSession,
+} from '../utils/quizSessionHandler';
+
 const MultchoiceQuiz = () => {
   const [kanjiData, setKanjiData] = useState([]);
-  const [selectedLevel, setSelectedLevel] = useState('5');
+  const [selectedLevels, setSelectedLevels] = useState(['5']);
+
   const [currentKanji, setCurrentKanji] = useState(null);
   const [choices, setChoices] = useState([]);
   const [isCorrect, setIsCorrect] = useState(null);
@@ -17,10 +24,18 @@ const MultchoiceQuiz = () => {
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [percentageCorrect, setPercentageCorrect] = useState(0);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [repeatIncorrect, setRepeatIncorrect] = useState(true);
+  const [quizStarted, setQuizStarted] = useState(false);
 
-  const getKanjiByLevel = (level) => kanjiByLevel[level] || [];
+  const getKanjiByLevels = (levels) => {
+    return levels.flatMap((level) => kanjiByLevel[level] || []);
+  };
 
-  const generateChoices = (correctKanji, allKanji) => {
+  const shuffleArray = (array) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
+
+  const generateChoices = useCallback((correctKanji, allKanji) => {
     const randomChoices = allKanji
       .filter((k) => k !== correctKanji)
       .sort(() => 0.5 - Math.random())
@@ -29,23 +44,100 @@ const MultchoiceQuiz = () => {
     randomChoices.push(correctKanji);
     randomChoices.sort(() => 0.5 - Math.random());
     setChoices(randomChoices);
-  };
-
-  const startQuiz = useCallback((data) => {
-    setCurrentRound(0);
-    setQuizCompleted(false);
-    setCorrectCount(0);
-    setIncorrectCount(0);
-    setPercentageCorrect(0);
-    setCurrentKanji(data[0]);
-    generateChoices(data[0], data);
   }, []);
 
+  const startQuiz = useCallback(
+    (data) => {
+      setCurrentRound(0);
+      setQuizCompleted(false);
+      setCorrectCount(0);
+      setIncorrectCount(0);
+      setPercentageCorrect(0);
+      setCurrentKanji(data[0]);
+      generateChoices(data[0], data);
+    },
+    [generateChoices]
+  );
+
+  const toggleLevel = (level) => {
+    setSelectedLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
+    );
+  };
+
+  const restoreSession = useCallback(
+    (session) => {
+      const fullData = getKanjiByLevels(session.selectedLevels);
+
+      const reconstructedPool = session.kanjiPool
+        .map((uid) => fullData.find((k) => k.uid === uid))
+        .filter(Boolean);
+
+      setSelectedLevels(session.selectedLevels);
+      setRepeatIncorrect(session.repeatIncorrect ?? true);
+      setKanjiData(reconstructedPool);
+      setCurrentRound(session.currentRound);
+      setCorrectCount(session.correctCount);
+      setIncorrectCount(session.incorrectCount);
+      setPercentageCorrect(session.percentageCorrect);
+      setQuizCompleted(session.quizCompleted);
+      const restoredKanji = reconstructedPool[session.currentRound];
+
+      setCurrentKanji(restoredKanji);
+
+      if (restoredKanji) {
+        generateChoices(restoredKanji, reconstructedPool);
+      }
+    },
+    [generateChoices]
+  );
+
   useEffect(() => {
-    const data = getKanjiByLevel(selectedLevel);
-    setKanjiData(data);
-    if (data.length > 0) startQuiz(data);
-  }, [selectedLevel, startQuiz]);
+    const saved = loadSession('multichoice');
+
+    if (saved) {
+      restoreSession(saved);
+      setQuizStarted(true);
+    }
+  }, [restoreSession]);
+
+  useEffect(() => {
+    if (!currentKanji) return;
+
+    saveSession('multichoice', {
+      selectedLevels,
+      repeatIncorrect,
+      kanjiPool: kanjiData.map((k) => k.uid),
+      currentRound,
+      correctCount,
+      incorrectCount,
+      percentageCorrect,
+      quizCompleted,
+    });
+  }, [
+    kanjiData,
+    currentRound,
+    correctCount,
+    incorrectCount,
+    percentageCorrect,
+    quizCompleted,
+    currentKanji,
+    selectedLevels,
+    repeatIncorrect,
+  ]);
+
+  const startFreshQuiz = () => {
+    clearSession('multichoice');
+
+    const combined = getKanjiByLevels(selectedLevels);
+    const shuffled = shuffleArray(combined);
+
+    setKanjiData(shuffled);
+
+    if (shuffled.length > 0) {
+      startQuiz(shuffled);
+    }
+  };
 
   const reAddKanjiToPool = (kanji) => {
     const index = Math.floor(Math.random() * kanjiData.length);
@@ -79,7 +171,14 @@ const MultchoiceQuiz = () => {
     } else {
       setIsCorrect(false);
       setIncorrectCount((c) => c + 1);
-      reAddKanjiToPool(currentKanji);
+    }
+
+    if (!correct) {
+      setIncorrectCount((c) => c + 1);
+
+      if (repeatIncorrect) {
+        reAddKanjiToPool(currentKanji);
+      }
     }
 
     recordResult(currentKanji.uid, correct);
@@ -94,6 +193,52 @@ const MultchoiceQuiz = () => {
       setIsButtonDisabled(false);
     }, 500);
   };
+  if (!quizStarted) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+          <h1 className="text-3xl font-bold mb-6">Configure Quiz</h1>
+
+          <div className="mb-6 text-left">
+            <p className="mb-2 font-semibold">Select JLPT Levels:</p>
+            {['5', '4', '3', '2', '1'].map((level) => (
+              <label key={level} className="block mb-1">
+                <input
+                  type="checkbox"
+                  checked={selectedLevels.includes(level)}
+                  onChange={() => toggleLevel(level)}
+                  className="mr-2"
+                />
+                JLPT N{level}
+              </label>
+            ))}
+          </div>
+
+          <div className="mb-6 text-left">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={repeatIncorrect}
+                onChange={() => setRepeatIncorrect((r) => !r)}
+              />
+              Repeat incorrect answers
+            </label>
+          </div>
+
+          <button
+            onClick={() => {
+              if (selectedLevels.length === 0) return;
+              startFreshQuiz();
+              setQuizStarted(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2"
+          >
+            Start Quiz
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
@@ -102,19 +247,15 @@ const MultchoiceQuiz = () => {
           Multiple Choice Quiz
         </h1>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-          <select
-            value={selectedLevel}
-            onChange={(e) => setSelectedLevel(e.target.value)}
-            className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2"
-          >
-            <option value="5">JLPT N5</option>
-            <option value="4">JLPT N4</option>
-            <option value="3">JLPT N3</option>
-            <option value="2">JLPT N2</option>
-            <option value="1">JLPT N1</option>
-          </select>
-        </div>
+        <button
+          onClick={() => {
+            clearSession('multichoice');
+            setQuizStarted(false);
+          }}
+          className="bg-red-600 hover:bg-red-500 rounded-lg px-4 py-2 mb-4"
+        >
+          End Quiz
+        </button>
 
         <div className="text-center text-zinc-400 mb-4">
           <p>

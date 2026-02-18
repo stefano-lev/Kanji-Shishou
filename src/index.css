@@ -24,3 +24,11 @@
   scrollbar-width: thin;
   scrollbar-color: #3f3f46 #18181b;
 }
+
+body {
+  background: linear-gradient(to bottom right, #18181b, #09090b, #000000);
+}
+
+html {
+  overflow-y: scroll;
+}

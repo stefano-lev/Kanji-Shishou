@@ -2,7 +2,7 @@
 
 An interactive web app designed to help users study and master Japanese kanji effectively. This tool combines powerful features like flashcard quizzes, kanji dictionaries, and more to make kanji learning engaging and accessible.
 
-## Features (Planned)
+## Features
 
 - **Flashcard Quiz:** Test your kanji knowledge by matching words/definitions with the correct kanji.
 - **Kanji Dictionary:** Browse and filter kanji by stroke count, JLPT level, and more.
@@ -18,13 +18,13 @@ _Home Screen._
 _Demonstration of the basic flashcard functionality._
 
 ![Screenshot 3](public/images/kanji-3.png)
-_Fully-functional and customizable Kanji Dictionary resource._
-
-![Screenshot 4](public/images/kanji-4.png)
 _Multiple Choice Kanji Quiz._
 
+![Screenshot 4](public/images/kanji-4.png)
+_Fully-functional and customizable Kanji Dictionary resource._
+
 ![Screenshot 5](public/images/kanji-5.png)
-_Filtering Options._
+_Kanji Dictionary Infocards._
 
 ![Screenshot 6](public/images/kanji-6.png)
 _Stats Screen (WIP)._

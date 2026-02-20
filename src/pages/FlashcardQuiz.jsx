@@ -1,10 +1,12 @@
 /* eslint-disable react/prop-types */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { kanjiByLevel } from '../data/kanjiData';
 
 import { recordSeen } from '../utils/statsHandler';
+
+import { recordDailyStudy } from '../utils/dailyStatsHandler';
 
 import {
   loadSession,
@@ -19,17 +21,36 @@ const FlashcardQuiz = () => {
   const [selectedLevel, setSelectedLevel] = useState('5');
   const [randomOrder, setRandomOrder] = useState(false);
 
+  const cardStartTimeRef = useRef(Date.now());
+
+  useEffect(() => {
+    if (currentKanji) {
+      cardStartTimeRef.current = Date.now();
+    }
+  }, [currentKanji]);
+
   const getKanjiByLevel = (level) => kanjiByLevel[level] || [];
 
   const handleQuizProgress = () => {
-    if (!kanjiData.length) return;
+    if (!kanjiData.length || !currentKanji) return;
+
+    const now = Date.now();
+    const durationSeconds = Math.max(
+      1,
+      Math.floor((now - cardStartTimeRef.current) / 1000)
+    );
+
+    recordSeen(currentKanji.uid);
+
+    recordDailyStudy({
+      uid: currentKanji.uid,
+      correct: false,
+      durationSeconds,
+    });
 
     const nextIndex =
       currentKanjiIndex + 1 >= kanjiData.length ? 0 : currentKanjiIndex + 1;
 
-    if (currentKanji) {
-      recordSeen(currentKanji.uid);
-    }
     setCurrentKanjiIndex(nextIndex);
     setCurrentKanji(kanjiData[nextIndex]);
   };

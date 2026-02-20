@@ -1,9 +1,11 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { kanjiByLevel } from '../data/kanjiData';
 
 import { recordResult } from '../utils/statsHandler';
+
+import { recordDailyStudy } from '../utils/dailyStatsHandler';
 
 import {
   loadSession,
@@ -26,6 +28,8 @@ const MultchoiceQuiz = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [repeatIncorrect, setRepeatIncorrect] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
+
+  const questionStartRef = useRef(null);
 
   const getKanjiByLevels = (levels) => {
     return levels.flatMap((level) => kanjiByLevel[level] || []);
@@ -126,6 +130,12 @@ const MultchoiceQuiz = () => {
     repeatIncorrect,
   ]);
 
+  useEffect(() => {
+    if (currentKanji && !quizCompleted) {
+      questionStartRef.current = Date.now();
+    }
+  }, [currentKanji, quizCompleted]);
+
   const startFreshQuiz = () => {
     clearSession('multichoice');
 
@@ -170,7 +180,6 @@ const MultchoiceQuiz = () => {
       setCorrectCount((c) => c + 1);
     } else {
       setIsCorrect(false);
-      setIncorrectCount((c) => c + 1);
     }
 
     if (!correct) {
@@ -182,6 +191,16 @@ const MultchoiceQuiz = () => {
     }
 
     recordResult(currentKanji.uid, correct);
+
+    const durationSeconds = Math.floor(
+      (Date.now() - questionStartRef.current) / 1000
+    );
+
+    recordDailyStudy({
+      uid: currentKanji.uid,
+      correct,
+      durationSeconds,
+    });
 
     const answered = currentRound + 1;
     setPercentageCorrect(
@@ -241,21 +260,23 @@ const MultchoiceQuiz = () => {
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
+    <div className="min-h-screen py-20 flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
       <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8">
-        <h1 className="text-4xl font-bold text-center mb-6">
-          Multiple Choice Quiz
-        </h1>
+        <div className="relative mb-6">
+          <h1 className="text-4xl font-bold text-center">
+            Multiple Choice Quiz
+          </h1>
 
-        <button
-          onClick={() => {
-            clearSession('multichoice');
-            setQuizStarted(false);
-          }}
-          className="bg-red-600 hover:bg-red-500 rounded-lg px-4 py-2 mb-4"
-        >
-          End Quiz
-        </button>
+          <button
+            onClick={() => {
+              clearSession('multichoice');
+              setQuizStarted(false);
+            }}
+            className="bg-red-600 hover:bg-red-500 rounded-lg px-4 py-2 absolute right-0 top-1/2 -translate-y-1/2"
+          >
+            End Quiz
+          </button>
+        </div>
 
         <div className="text-center text-zinc-400 mb-4">
           <p>

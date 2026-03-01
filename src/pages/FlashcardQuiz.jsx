@@ -44,7 +44,7 @@ const FlashcardQuiz = () => {
 
     recordDailyStudy({
       uid: currentKanji.uid,
-      correct: false,
+      //correct: false,
       durationSeconds,
     });
 
@@ -135,7 +135,7 @@ const FlashcardQuiz = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
+    <div className="min-h-screen py-16 flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
       <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8">
         <h1 className="text-4xl font-bold text-center mb-6">
           Kanji Flashcard Quiz
@@ -196,7 +196,21 @@ const FlashcardQuiz = () => {
         </div>
 
         <p className="text-center text-zinc-400 mb-4">
-          {currentKanjiIndex + 1} / {kanjiData.length}
+          {' '}
+          <div className="text-center space-y-3">
+            <p className="text-sm text-zinc-400">
+              Card {currentKanjiIndex + 1} / {kanjiData.length}
+            </p>
+
+            <div className="w-full bg-zinc-800 h-2 rounded">
+              <div
+                className="bg-indigo-500 h-2 rounded transition-all duration-300"
+                style={{
+                  width: `${((currentKanjiIndex + 1) / kanjiData.length) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
         </p>
 
         {currentKanji && (

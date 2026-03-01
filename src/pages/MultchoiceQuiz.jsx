@@ -214,11 +214,11 @@ const MultchoiceQuiz = () => {
   };
   if (!quizStarted) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-          <h1 className="text-3xl font-bold mb-6">Configure Quiz</h1>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white flex justify-center items-center px-6 py-16">
+        <div className=" max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 space-y-6">
+          <h1 className="text-3xl font-bold">Configure Quiz</h1>
 
-          <div className="mb-6 text-left">
+          <div className="text-left">
             <p className="mb-2 font-semibold">Select JLPT Levels:</p>
             {['5', '4', '3', '2', '1'].map((level) => (
               <label key={level} className="block mb-1">
@@ -233,7 +233,7 @@ const MultchoiceQuiz = () => {
             ))}
           </div>
 
-          <div className="mb-6 text-left">
+          <div className="text-left">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -260,9 +260,9 @@ const MultchoiceQuiz = () => {
   }
 
   return (
-    <div className="min-h-screen py-20 flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
-      <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8">
-        <div className="relative mb-6">
+    <div className="min-h-screen py-16 flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
+      <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6">
+        <div className="relative">
           <h1 className="text-4xl font-bold text-center">
             Multiple Choice Quiz
           </h1>

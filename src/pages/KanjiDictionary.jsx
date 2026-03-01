@@ -243,7 +243,7 @@ const KanjiDictionary = () => {
   }, []);
 
   return (
-    <div className="min-h-[100svh] px-6 py-24 text-white">
+    <div className="min-h-[100svh] px-6 py-16 text-white">
       <h1 className="text-4xl font-bold text-center mb-6">Kanji Dictionary</h1>
 
       <div className="flex flex-wrap gap-4 justify-center mb-6">
@@ -409,7 +409,7 @@ const KanjiDictionary = () => {
                 onClick={() => toggleFavorite(selectedKanji)}
                 className="text-2xl"
               >
-                {favorites.includes(selectedKanji.uid) ? '❤️' : '🖤'}
+                {favorites.includes(selectedKanji.uid) ? '❤️' : '❤︎⁠'}
               </button>
 
               <button

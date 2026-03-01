@@ -1,5 +1,6 @@
 const FAVORITES_KEY = 'favorites';
 const STATS_KEY = 'kanjiStats';
+const SRS_KEY = 'kanjiSRS';
 
 export const loadStats = () => {
   const data = localStorage.getItem(STATS_KEY);

@@ -44,7 +44,7 @@ const Home = () => {
   const dailyStats = getDailyStats();
   const uniqueDates = Object.keys(dailyStats);
   const streak = calculateStreak(uniqueDates);
-  const last30Days = getLastNDays(30);
+  const last14Days = getLastNDays(14);
 
   const dayData = selectedDay ? dailyStats[selectedDay] : null;
 
@@ -56,10 +56,10 @@ const Home = () => {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto space-y-10"
+        className="max-w-4xl mx-auto space-y-6"
       >
         {/* Header */}
-        <div className="relative text-center space-y-2 p-8">
+        <div className="relative text-center space-y-2 p-4">
           <button
             onClick={() => setShowPrefsModal(true)}
             className="absolute right-4 top-4 text-zinc-400 hover:text-white transition"
@@ -100,16 +100,16 @@ const Home = () => {
           <NavCard to="/flashcard-quiz" label="Flashcard Quiz" />
           <NavCard to="/multchoice-quiz" label="Multiple Choice Quiz" />
           <NavCard to="/kanji-dictionary" label="Kanji Dictionary" />
-          <NavCard to="/stroke-order" label="Stroke Order Quiz (WIP)" />
+          <NavCard to="/srs-review" label="SRS Review (Beta)" />
         </div>
 
         {/* Calendar */}
         {prefs.showCalendar && (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Last 30 Days</h2>
+            <h2 className="text-xl font-semibold mb-4">Last 14 Days</h2>
 
             <div className="grid grid-cols-7 gap-2">
-              {last30Days.map((day) => {
+              {last14Days.map((day) => {
                 const studied = dailyStats[day];
                 const isToday = day === todayISO;
                 const isSelected = day === selectedDay;

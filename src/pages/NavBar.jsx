@@ -14,6 +14,7 @@ const NavBar = () => {
           <NavItem to="/" label="Home" />
           <NavItem to="/flashcard-quiz" label="Flashcards" />
           <NavItem to="/multchoice-quiz" label="Multiple Choice" />
+          <NavItem to="/srs-review" label="SRS Review (Beta)" />
           <NavItem to="/kanji-dictionary" label="Dictionary" />
           <NavItem to="/stroke-order" label="Stroke Order (WIP)" />
           <button

@@ -21,12 +21,15 @@ _Demonstration of the basic flashcard functionality._
 _Multiple Choice Kanji Quiz._
 
 ![Screenshot 4](public/images/kanji-4.png)
-_Fully-functional and customizable Kanji Dictionary resource._
+_SRS Review Feature (WIP)._
 
 ![Screenshot 5](public/images/kanji-5.png)
-_Kanji Dictionary Infocards._
+_Fully-functional and customizable Kanji Dictionary resource._
 
 ![Screenshot 6](public/images/kanji-6.png)
+_Kanji Dictionary Infocards._
+
+![Screenshot 7](public/images/kanji-7.png)
 _Stats Screen (WIP)._
 
 ## Project Goals

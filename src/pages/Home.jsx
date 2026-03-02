@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { getAllStats } from '../utils/statsHandler';
 import { getDailyStats } from '../utils/dailyStatsHandler';
 import { useState } from 'react';
+import Card from './ui/Card';
 
 import { loadHomePreferences } from '../utils/homePreferences';
 import HomePreferencesModal from './HomePreferencesModal';
@@ -51,15 +52,15 @@ const Home = () => {
   const todayISO = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white px-6 py-12">
+    <Card className="space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto space-y-6"
+        className="space-y-8"
       >
         {/* Header */}
-        <div className="relative text-center space-y-2 p-4">
+        <div className="relative text-center space-y-2">
           <button
             onClick={() => setShowPrefsModal(true)}
             className="absolute right-4 top-4 text-zinc-400 hover:text-white transition"
@@ -165,7 +166,7 @@ const Home = () => {
 
         {prefs.showAllTimeStats && <AllTimeStats />}
       </motion.div>
-    </div>
+    </Card>
   );
 };
 

@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
+import Card from './ui/Card';
+
 import * as storageHandler from '../utils/localStorageHandler';
 
 import { kanjiByLevel, allKanji } from '../data/kanjiData';
@@ -89,7 +91,7 @@ const KanjiGrid = React.memo(function KanjiGrid({
   }
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto px-8">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto px-2">
       {kanjiData.map((kanji) => {
         const infobox = getInfoboxValue(kanji, sortKey);
 
@@ -97,7 +99,7 @@ const KanjiGrid = React.memo(function KanjiGrid({
           <button
             key={kanji.uid}
             onClick={() => onSelect(kanji)}
-            className="relative h-24 rounded-xl bg-white/5 border border-white/10 text-2xl font-bold hover:bg-white/10"
+            className="relative aspect-square rounded-xl bg-white/5 border border-white/10 text-2xl font-bold hover:bg-white/10"
           >
             {kanji.literal}
 
@@ -243,10 +245,10 @@ const KanjiDictionary = () => {
   }, []);
 
   return (
-    <div className="min-h-[100svh] px-6 py-16 text-white">
+    <Card className="max-w-4xl space-y-6">
       <h1 className="text-4xl font-bold text-center mb-6">Kanji Dictionary</h1>
 
-      <div className="flex flex-wrap gap-4 justify-center mb-6">
+      <div className="flex flex-wrap gap-2 justify-center mb-6">
         <select
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
@@ -278,7 +280,7 @@ const KanjiDictionary = () => {
           onClick={() =>
             setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
           }
-          className="px-3 py-2 rounded-lg bg-white/10"
+          className="px-2 py-1 rounded-lg bg-zinc-900"
         >
           {sortDirection === 'asc' ? '↑' : '↓'}
         </button>
@@ -309,23 +311,23 @@ const KanjiDictionary = () => {
 
       {selectedKanji && (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center"
           onClick={(e) =>
             e.target === e.currentTarget && setSelectedKanji(null)
           }
         >
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-[500px] max-h-[80vh] overflow-y-auto">
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             {/* HEADER */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-2">
               <h2 className="text-6xl font-bold">{selectedKanji.literal}</h2>
 
-              <p className="mt-3 text-zinc-300 text-lg">
+              <p className="mt-2 text-zinc-300 text-lg">
                 {selectedKanji.reading_meaning.rmgroup.meaning?.join(', ')}
               </p>
             </div>
 
             {/* CORE INFO GRID */}
-            <div className="grid grid-cols-2 gap-4 text-sm border-t border-white/10 pt-4">
+            <div className="grid grid-cols-3 gap-2 text-sm border-t border-white/10 pt-2">
               <InfoRow label="Strokes">
                 {normalizeStrokeCount(selectedKanji.misc.stroke_count)}
               </InfoRow>
@@ -342,7 +344,7 @@ const KanjiDictionary = () => {
             </div>
 
             {/* READINGS */}
-            <div className="mt-6 border-t border-white/10 pt-4">
+            <div className="mt-2 border-t border-white/10 pt-2">
               <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
                 Readings
               </h3>
@@ -351,7 +353,7 @@ const KanjiDictionary = () => {
                 const { on, kun } = extractReadings(selectedKanji);
 
                 return (
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1 text-sm">
                     {on.length > 0 && (
                       <p>
                         <span className="text-zinc-400">On:</span>{' '}
@@ -372,7 +374,7 @@ const KanjiDictionary = () => {
             {/* NANORI */}
             {normalizeToArray(selectedKanji.reading_meaning?.nanori).length >
               0 && (
-              <div className="mt-6 border-t border-white/10 pt-4">
+              <div className="mt-2 border-t border-white/10 pt-4">
                 <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
                   Name Readings (Nanori)
                 </h3>
@@ -386,7 +388,7 @@ const KanjiDictionary = () => {
 
             {/* DICTIONARY REFERENCES */}
             {selectedKanji.dic_number?.dic_ref && (
-              <details className="mt-6 border-t border-white/10 pt-4 text-sm">
+              <details className="mt-2 border-t border-white/10 pt-4 text-sm">
                 <summary className="cursor-pointer text-zinc-400 hover:text-white">
                   Dictionary References
                 </summary>
@@ -422,7 +424,7 @@ const KanjiDictionary = () => {
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 

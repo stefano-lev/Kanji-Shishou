@@ -28,10 +28,16 @@ const StatsModal = ({ onClose }) => {
       case 'seen':
         return dataB.seen - dataA.seen;
 
-      case 'accuracy': {
+      case 'low-accuracy': {
         const accA = dataA.correct / (dataA.correct + dataA.incorrect || 1);
         const accB = dataB.correct / (dataB.correct + dataB.incorrect || 1);
         return accA - accB;
+      }
+
+      case 'high-accuracy': {
+        const accA = dataA.correct / (dataA.correct + dataA.incorrect || 1);
+        const accB = dataB.correct / (dataB.correct + dataB.incorrect || 1);
+        return accB - accA;
       }
 
       case 'uid':
@@ -71,7 +77,8 @@ const StatsModal = ({ onClose }) => {
             onChange={(e) => setSortBy(e.target.value)}
             className="bg-zinc-800 border border-white/10 rounded px-3 py-2 text-white"
           >
-            <option value="accuracy">Lowest Accuracy</option>
+            <option value="low-accuracy">Lowest Accuracy</option>
+            <option value="high-accuracy">Highest Accuracy</option>
             <option value="seen">Most Seen</option>
             <option value="uid">UID</option>
           </select>

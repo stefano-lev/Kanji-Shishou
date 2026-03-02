@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useCallback, useRef } from 'react';
 
+import Card from './ui/Card';
+
 import { kanjiByLevel } from '../data/kanjiData';
 
 import { recordResult } from '../utils/statsHandler';
@@ -212,89 +214,88 @@ const MultchoiceQuiz = () => {
       setIsButtonDisabled(false);
     }, 500);
   };
+
   if (!quizStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white flex justify-center items-center px-6 py-16">
-        <div className=" max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 space-y-6">
-          <h1 className="text-3xl font-bold">Configure Quiz</h1>
+      <Card className="max-w-md space-y-6">
+        <h1 className="text-2xl font-bold">Configure Quiz</h1>
 
-          <div className="text-left">
-            <p className="mb-2 font-semibold">Select JLPT Levels:</p>
-            {['5', '4', '3', '2', '1'].map((level) => (
-              <label key={level} className="block mb-1">
-                <input
-                  type="checkbox"
-                  checked={selectedLevels.includes(level)}
-                  onChange={() => toggleLevel(level)}
-                  className="mr-2"
-                />
-                JLPT N{level}
-              </label>
-            ))}
-          </div>
-
-          <div className="text-left">
-            <label className="flex items-center gap-2">
+        <div className="text-left">
+          <p className="mb-2 font-semibold">Select JLPT Levels:</p>
+          {['5', '4', '3', '2', '1'].map((level) => (
+            <label key={level} className="block mb-1">
               <input
                 type="checkbox"
-                checked={repeatIncorrect}
-                onChange={() => setRepeatIncorrect((r) => !r)}
+                checked={selectedLevels.includes(level)}
+                onChange={() => toggleLevel(level)}
+                className="mr-2"
               />
-              Repeat incorrect answers
+              JLPT N{level}
             </label>
-          </div>
-
-          <button
-            onClick={() => {
-              if (selectedLevels.length === 0) return;
-              startFreshQuiz();
-              setQuizStarted(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2"
-          >
-            Start Quiz
-          </button>
+          ))}
         </div>
-      </div>
+
+        <div className="text-left">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={repeatIncorrect}
+              onChange={() => setRepeatIncorrect((r) => !r)}
+            />
+            Repeat incorrect answers
+          </label>
+        </div>
+
+        <button
+          onClick={() => {
+            if (selectedLevels.length === 0) return;
+            startFreshQuiz();
+            setQuizStarted(true);
+          }}
+          className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2 mt-4"
+        >
+          Start Quiz
+        </button>
+      </Card>
     );
   }
 
   return (
-    <div className="min-h-screen py-16 flex justify-center items-center px-6 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black text-white">
-      <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6">
-        <div className="relative">
-          <h1 className="text-4xl font-bold text-center">
-            Multiple Choice Quiz
-          </h1>
+    <Card className="flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl font-bold">Multiple Choice Quiz</h1>
 
-          <button
-            onClick={() => {
-              clearSession('multichoice');
-              setQuizStarted(false);
-            }}
-            className="bg-red-600 hover:bg-red-500 rounded-lg px-4 py-2 absolute right-0 top-1/2 -translate-y-1/2"
-          >
-            End Quiz
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            clearSession('multichoice');
+            setQuizStarted(false);
+          }}
+          className="bg-red-600 hover:bg-red-500 rounded-lg px-3 py-1 text-sm"
+        >
+          End
+        </button>
+      </div>
 
-        <div className="text-center text-zinc-400 mb-4">
-          <p>
-            Correct: {correctCount} | Incorrect: {incorrectCount} | Total:{' '}
-            {kanjiData.length}
-          </p>
-          <p>Accuracy: {percentageCorrect}%</p>
-        </div>
+      <div className="text-sm font-semibold text-zinc-400 mb-2">
+        <p>
+          Correct: {correctCount} | Incorrect: {incorrectCount} | Total:{' '}
+          {kanjiData.length}
+        </p>
+        <p>Accuracy: {percentageCorrect}%</p>
+      </div>
 
+      {/* Main content (scrollable) */}
+      <div className="mb-4">
         {quizCompleted ? (
           <div className="text-center mt-8">
-            <h2 className="text-2xl font-semibold mb-2">Quiz Complete 🎉</h2>
+            <h2 className="text-xl font-semibold mb-2">Quiz Complete 🎉</h2>
             <p>You’ve finished this JLPT level.</p>
           </div>
         ) : (
           currentKanji && (
             <>
-              <h2 className="text-xl text-center mb-4">
+              <h2 className="text-lg font-bold text-center mb-2">
                 Round {currentRound + 1}
               </h2>
 
@@ -316,41 +317,46 @@ const MultchoiceQuiz = () => {
                 {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
                   'None'}
               </InfoBlock>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-                {choices.map((choice, idx) => (
-                  <button
-                    key={idx}
-                    disabled={isButtonDisabled}
-                    onClick={() => handleAnswer(choice)}
-                    className="rounded-xl bg-blue-600 hover:bg-blue-500 transition text-xl font-bold py-4 disabled:opacity-50"
-                  >
-                    {choice.literal}
-                  </button>
-                ))}
-              </div>
-
-              <div className="min-h-[2rem] flex items-center justify-center mt-6">
-                {isCorrect !== null && (
-                  <p
-                    className={`text-xl font-bold ${
-                      isCorrect ? 'text-green-400' : 'text-red-400'
-                    }`}
-                  >
-                    {isCorrect ? 'Correct!' : 'Incorrect!'}
-                  </p>
-                )}
-              </div>
             </>
           )
         )}
       </div>
-    </div>
+
+      {/* Footer */}
+      {!quizCompleted && currentKanji && (
+        <div className="flex-shrink-0 pt-2">
+          <div className="grid grid-cols-4 gap-3 max-w-xl mx-auto">
+            {choices.map((choice, idx) => (
+              <button
+                key={idx}
+                disabled={isButtonDisabled}
+                onClick={() => handleAnswer(choice)}
+                className="rounded-xl bg-blue-600 hover:bg-blue-500 transition text-base font-semibold py-2 disabled:opacity-50"
+              >
+                {choice.literal}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[2rem] flex items-center justify-center mt-4">
+            {isCorrect !== null && (
+              <p
+                className={`text-lg font-bold ${
+                  isCorrect ? 'text-green-400' : 'text-red-400'
+                }`}
+              >
+                {isCorrect ? 'Correct!' : 'Incorrect!'}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 };
 
 const InfoBlock = ({ title, children }) => (
-  <div className="mt-4 bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+  <div className="mt-2 bg-white/5 border border-white/10 rounded-xl p-3 text-center">
     <p className="text-zinc-400 mb-1">{title}</p>
     <p>{children}</p>
   </div>

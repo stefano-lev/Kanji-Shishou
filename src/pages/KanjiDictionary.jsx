@@ -91,7 +91,7 @@ const KanjiGrid = React.memo(function KanjiGrid({
   }
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto px-2">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-4 max-w-5xl mx-auto px-2">
       {kanjiData.map((kanji) => {
         const infobox = getInfoboxValue(kanji, sortKey);
 
@@ -99,19 +99,28 @@ const KanjiGrid = React.memo(function KanjiGrid({
           <button
             key={kanji.uid}
             onClick={() => onSelect(kanji)}
-            className="relative aspect-square rounded-xl bg-white/5 border border-white/10 text-2xl font-bold hover:bg-white/10"
+            className="relative aspect-square rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center"
           >
-            {kanji.literal}
-
-            <span className="absolute bottom-2 right-3 text-xs text-zinc-400">
-              {'N' + kanji.uid}
+            {/* Main Kanji */}
+            <span className="text-2xl md:text-3xl font-bold">
+              {kanji.literal}
             </span>
 
+            {/* Top Right Badge */}
             {infobox != null && (
-              <span className="absolute top-2 right-2 text-xs bg-white/10 px-2 py-0.5 rounded-md text-zinc-300">
-                {infobox}
-              </span>
+              <div className="absolute inset-0 flex items-start justify-end p-2 pointer-events-none">
+                <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-0.5 rounded-md text-zinc-300">
+                  {infobox}
+                </span>
+              </div>
             )}
+
+            {/* Bottom Right UID */}
+            <div className="absolute inset-0 flex items-end justify-end p-2 pointer-events-none">
+              <span className="text-[10px] sm:text-xs text-zinc-500">
+                N{kanji.uid}
+              </span>
+            </div>
           </button>
         );
       })}

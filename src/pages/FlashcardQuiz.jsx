@@ -1,8 +1,12 @@
-/* eslint-disable react/prop-types */
-
 import { useEffect, useState, useRef } from 'react';
 
 import Card from './ui/Card';
+
+import InfoBlock from './ui/InfoBlock';
+
+import ProgressBar from './ui/ProgressBar';
+
+import Button from './ui/Button';
 
 import { kanjiByLevel } from '../data/kanjiData';
 
@@ -152,6 +156,10 @@ const FlashcardQuiz = () => {
     setQuizStarted(true);
   };
 
+  if (!restored) {
+    return null;
+  }
+
   if (!quizStarted) {
     return (
       <Card className="max-w-md space-y-6">
@@ -181,17 +189,17 @@ const FlashcardQuiz = () => {
           Random Order
         </label>
 
-        <button
+        <Button
+          variant="primary"
           onClick={() => {
             if (selectedLevels.length === 0) return;
 
             startFreshQuiz();
             setQuizStarted(true);
           }}
-          className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2"
         >
           Start Quiz
-        </button>
+        </Button>
       </Card>
     );
   }
@@ -203,8 +211,8 @@ const FlashcardQuiz = () => {
           You have finished all {kanjiData.length} cards.
         </p>
 
-        <button
-          className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2 mt-4"
+        <Button
+          variant="primary"
           onClick={() => {
             // Reset quiz states to show pre-quiz config
             setQuizStarted(false);
@@ -214,7 +222,7 @@ const FlashcardQuiz = () => {
           }}
         >
           Return to Quiz Setup
-        </button>
+        </Button>
       </Card>
     );
   }
@@ -227,21 +235,18 @@ const FlashcardQuiz = () => {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="danger"
               onClick={() => {
                 setQuizStarted(false);
               }}
-              className="rounded-lg bg-red-600 hover:bg-red-500 transition px-4 py-2 font-medium"
             >
               End
-            </button>
+            </Button>
 
-            <button
-              onClick={handleQuizProgress}
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 transition px-6 py-2 font-medium"
-            >
+            <Button variant="primary" onClick={handleQuizProgress}>
               Next Card
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -251,14 +256,10 @@ const FlashcardQuiz = () => {
           Card {currentKanjiIndex + 1} / {kanjiData.length}
         </p>
 
-        <div className="w-full max-w-sm bg-zinc-800 h-2 rounded mx-auto">
-          <div
-            className="bg-indigo-500 h-2 rounded transition-all duration-300"
-            style={{
-              width: `${((currentKanjiIndex + 1) / kanjiData.length) * 100}%`,
-            }}
-          />
-        </div>
+        <ProgressBar
+          value={currentKanjiIndex + 1}
+          max={kanjiData.length}
+        ></ProgressBar>
       </div>
 
       {currentKanji && (
@@ -269,34 +270,31 @@ const FlashcardQuiz = () => {
             </span>
           </div>
 
-          <InfoBlock title="Kun-yomi">
-            {currentKanji.reading_meaning.rmgroup.reading
-              .filter((r) => r['@r_type'] === 'ja_kun')
-              .map((r) => r['#text'])
-              .join(', ') || 'None'}
-          </InfoBlock>
+          <div className="w-full max-w-md mx-auto space-y-3">
+            <div className="grid grid-cols-2 gap-4 items-stretch">
+              <InfoBlock title="Kun-yomi">
+                {currentKanji.reading_meaning.rmgroup.reading
+                  .filter((r) => r['@r_type'] === 'ja_kun')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
+              </InfoBlock>
+              <InfoBlock title="On-yomi">
+                {currentKanji.reading_meaning.rmgroup.reading
+                  .filter((r) => r['@r_type'] === 'ja_on')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
+              </InfoBlock>
+            </div>
 
-          <InfoBlock title="On-yomi">
-            {currentKanji.reading_meaning.rmgroup.reading
-              .filter((r) => r['@r_type'] === 'ja_on')
-              .map((r) => r['#text'])
-              .join(', ') || 'None'}
-          </InfoBlock>
-
-          <InfoBlock title="Meanings">
-            {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
-          </InfoBlock>
+            <InfoBlock title="Meanings">
+              {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                'None'}
+            </InfoBlock>
+          </div>
         </div>
       )}
     </Card>
   );
 };
-
-const InfoBlock = ({ title, children }) => (
-  <div className="w-full bg-white/5 border border-white/10 rounded-xl p-2 sm:p-3 text-sm text-center">
-    <p className="text-zinc-400 mb-1">{title}</p>
-    <p className="text-white">{children}</p>
-  </div>
-);
 
 export default FlashcardQuiz;

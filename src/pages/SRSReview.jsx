@@ -1,8 +1,10 @@
-/* eslint-disable react/prop-types */
-
 import { useEffect, useState } from 'react';
 
 import Card from './ui/Card';
+import InfoBlock from './ui/InfoBlock';
+import ProgressBar from './ui/ProgressBar';
+import Button from './ui/Button';
+
 import { kanjiByLevel } from '../data/kanjiData';
 import { recordSeen } from '../utils/statsHandler';
 import { recordDailyStudy } from '../utils/dailyStatsHandler';
@@ -159,8 +161,31 @@ const SRSReview = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const answerOptions = [
+    {
+      value: 2,
+      label: 'Again',
+      variant: 'danger',
+    },
+    {
+      value: 3,
+      label: 'Hard',
+      variant: 'warning',
+    },
+    {
+      value: 4,
+      label: 'Good',
+      variant: 'success',
+    },
+    {
+      value: 5,
+      label: 'Easy',
+      variant: 'primary',
+    },
+  ];
+
   return (
-    <Card className="max-w space-y-4 text-center">
+    <Card className="max-w space-y-2 text-center">
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold text-start tracking-tight">
           SRS Review
@@ -171,24 +196,18 @@ const SRSReview = () => {
             <p className="text-lg font-bold text-center">
               Card {currentIndex + 1} / {sessionQueue.length}
             </p>
-            <div className="w-full max-w-sm bg-zinc-800 h-1 rounded mx-auto">
-              <div
-                className="bg-indigo-500 h-2 rounded transition-all duration-300"
-                style={{
-                  width: `${((currentIndex + 1) / sessionQueue.length) * 100}%`,
-                }}
-              />
-            </div>
+
+            <ProgressBar
+              value={currentIndex + 1}
+              max={sessionQueue.length}
+            ></ProgressBar>
           </div>
         )}
 
         {!srsOnboarding && !isFinished && currentKanji && (
-          <button
-            onClick={() => setIsFinished(true)}
-            className="rounded-lg bg-red-600 hover:bg-red-500 px-2 py-1"
-          >
+          <Button variant="danger" onClick={() => setIsFinished(true)}>
             End Session
-          </button>
+          </Button>
         )}
       </div>
 
@@ -209,12 +228,9 @@ const SRSReview = () => {
           </p>
 
           {hasExtraStudy() && (
-            <button
-              className="rounded-lg bg-blue-600 hover:bg-blue-500 transition px-6 py-2 font-medium"
-              onClick={handleExtraStudy}
-            >
+            <Button variant="primary" onClick={handleExtraStudy}>
               Continue Studying Anyway
-            </button>
+            </Button>
           )}
         </div>
       ) : currentKanji ? (
@@ -245,33 +261,18 @@ const SRSReview = () => {
           </InfoBlock>
 
           <div className="grid grid-cols-4 gap-4">
-            {[2, 3, 4, 5].map((q) => (
-              <button
-                key={q}
-                className={`${
-                  q === 2
-                    ? 'bg-red-600/90 hover:bg-red-500'
-                    : q === 3
-                      ? 'bg-amber-600/90 hover:bg-amber-500'
-                      : q === 4
-                        ? 'bg-emerald-600/90 hover:bg-emerald-500'
-                        : 'bg-sky-600/90 hover:bg-sky-500'
-                } rounded-xl px-4 py-2 transition-all duration-200 shadow-lg`}
-                onClick={() => handleAnswer(q)}
+            {answerOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={option.variant}
+                className="rounded-xl shadow-lg"
+                onClick={() => handleAnswer(option.value)}
               >
-                <div className="font-semibold">
-                  {q === 2
-                    ? 'Again'
-                    : q === 3
-                      ? 'Hard'
-                      : q === 4
-                        ? 'Good'
-                        : 'Easy'}
-                </div>
+                <div className="font-semibold">{option.label}</div>
                 <div className="text-xs opacity-70 mt-1">
-                  {previewInterval(q)}
+                  {previewInterval(option.value)}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </>
@@ -279,12 +280,5 @@ const SRSReview = () => {
     </Card>
   );
 };
-
-const InfoBlock = ({ title, children }) => (
-  <div className="mt-2 bg-white/5 border border-white/10 rounded-xl p-2 text-center">
-    <p className="text-zinc-400 mb-1">{title}</p>
-    <p>{children}</p>
-  </div>
-);
 
 export default SRSReview;

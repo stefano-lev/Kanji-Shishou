@@ -1,7 +1,10 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 import Card from './ui/Card';
+
+import InfoBlock from './ui/InfoBlock';
+
+import Button from './ui/Button';
 
 import { kanjiByLevel } from '../data/kanjiData';
 
@@ -246,16 +249,16 @@ const MultchoiceQuiz = () => {
           </label>
         </div>
 
-        <button
+        <Button
+          variant="primary"
           onClick={() => {
             if (selectedLevels.length === 0) return;
             startFreshQuiz();
             setQuizStarted(true);
           }}
-          className="bg-blue-600 hover:bg-blue-500 rounded-lg px-6 py-2 mt-4"
         >
           Start Quiz
-        </button>
+        </Button>
       </Card>
     );
   }
@@ -266,15 +269,15 @@ const MultchoiceQuiz = () => {
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold">Multiple Choice Quiz</h1>
 
-        <button
+        <Button
+          variant="danger"
           onClick={() => {
             clearSession('multichoice');
             setQuizStarted(false);
           }}
-          className="bg-red-600 hover:bg-red-500 rounded-lg px-3 py-1 text-sm"
         >
           End
-        </button>
+        </Button>
       </div>
 
       <div className="text-sm font-semibold text-zinc-400 mb-2">
@@ -299,24 +302,27 @@ const MultchoiceQuiz = () => {
                 Round {currentRound + 1}
               </h2>
 
-              <InfoBlock title="Kun-yomi">
-                {currentKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r['@r_type'] === 'ja_kun')
-                  .map((r) => r['#text'])
-                  .join(', ') || 'None'}
-              </InfoBlock>
+              <div className="w-full max-w-md mx-auto space-y-3">
+                <div className="grid grid-cols-2 gap-4 items-stretch">
+                  <InfoBlock title="Kun-yomi">
+                    {currentKanji.reading_meaning.rmgroup.reading
+                      .filter((r) => r['@r_type'] === 'ja_kun')
+                      .map((r) => r['#text'])
+                      .join(', ') || 'None'}
+                  </InfoBlock>
+                  <InfoBlock title="On-yomi">
+                    {currentKanji.reading_meaning.rmgroup.reading
+                      .filter((r) => r['@r_type'] === 'ja_on')
+                      .map((r) => r['#text'])
+                      .join(', ') || 'None'}
+                  </InfoBlock>
+                </div>
 
-              <InfoBlock title="On-yomi">
-                {currentKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r['@r_type'] === 'ja_on')
-                  .map((r) => r['#text'])
-                  .join(', ') || 'None'}
-              </InfoBlock>
-
-              <InfoBlock title="Meanings">
-                {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
-                  'None'}
-              </InfoBlock>
+                <InfoBlock title="Meanings">
+                  {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                    'None'}
+                </InfoBlock>
+              </div>
             </>
           )
         )}
@@ -354,12 +360,5 @@ const MultchoiceQuiz = () => {
     </Card>
   );
 };
-
-const InfoBlock = ({ title, children }) => (
-  <div className="mt-2 bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-    <p className="text-zinc-400 mb-1">{title}</p>
-    <p>{children}</p>
-  </div>
-);
 
 export default MultchoiceQuiz;

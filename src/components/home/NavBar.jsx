@@ -2,7 +2,7 @@
 
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
-import StatsModal from './StatsModal';
+import StatsModal from '../modals/StatsModal';
 
 const NavBar = () => {
   const [showStats, setShowStats] = useState(false);

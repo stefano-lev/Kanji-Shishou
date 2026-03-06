@@ -1,54 +1,66 @@
 import { useEffect, useState, useRef } from 'react';
 
-import Card from './ui/Card';
+import Card from '../ui/Card';
 
-import InfoBlock from './ui/InfoBlock';
+import InfoBlock from '../ui/InfoBlock';
 
-import ProgressBar from './ui/ProgressBar';
+import ProgressBar from '../ui/ProgressBar';
 
-import Button from './ui/Button';
+import Button from '../ui/Button';
 
-import { kanjiByLevel } from '../data/kanjiData';
+import { getKanjiByLevels, buildDeck } from '../../utils/deckBuilder';
 
-import { recordSeen } from '../utils/statsHandler';
+import { recordResult } from '../../utils/statsHandler';
 
-import { recordDailyStudy } from '../utils/dailyStatsHandler';
+import { recordDailyStudy } from '../../utils/dailyStatsHandler';
+
+import QuizConfig from '../quiz/QuizConfig';
+
+import QuizSummary from '../quiz/QuizSummary';
 
 import {
   loadSession,
   saveSession,
   clearSession,
-} from '../utils/quizSessionHandler';
+} from '../../utils/quizSessionHandler';
+
+import useQuizDeckConfig from '../../hooks/useQuizDeckConfig';
 
 const FlashcardQuiz = () => {
   const [currentKanjiIndex, setCurrentKanjiIndex] = useState(0);
   const [kanjiData, setKanjiData] = useState([]);
   const [currentKanji, setCurrentKanji] = useState(null);
-  const [selectedLevels, setSelectedLevels] = useState(['5']);
   const [randomOrder, setRandomOrder] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizFinished, setQuizFinished] = useState(false);
+  const [sessionTime, setSessionTime] = useState(0);
 
   const cardStartTimeRef = useRef(Date.now());
+
+  const {
+    selectedLevels,
+    toggleLevel,
+
+    maxAccuracyEnabled,
+    setMaxAccuracyEnabled,
+    maxAccuracy,
+    setMaxAccuracy,
+
+    maxCardsEnabled,
+    setMaxCardsEnabled,
+    maxCards,
+    setMaxCards,
+
+    maxPossibleCards,
+    predictedCount,
+    finalDeckSize,
+  } = useQuizDeckConfig();
 
   useEffect(() => {
     if (currentKanji) {
       cardStartTimeRef.current = Date.now();
     }
   }, [currentKanji]);
-
-  const getKanjiByLevels = (levels) => {
-    // Sort levels descending:
-    const sortedLevels = [...levels].sort((a, b) => Number(b) - Number(a));
-
-    return sortedLevels.flatMap((level) => {
-      const kanji = kanjiByLevel[level] || [];
-      // Sort by UID
-      return [...kanji].sort((a, b) =>
-        a.uid.localeCompare(b.uid, undefined, { numeric: true })
-      );
-    });
-  };
 
   const handleQuizProgress = () => {
     if (!kanjiData.length || !currentKanji) return;
@@ -59,7 +71,9 @@ const FlashcardQuiz = () => {
       Math.floor((now - cardStartTimeRef.current) / 1000)
     );
 
-    recordSeen(currentKanji.uid);
+    setSessionTime((t) => t + durationSeconds);
+
+    recordResult(currentKanji.uid);
 
     recordDailyStudy({
       uid: currentKanji.uid,
@@ -75,12 +89,6 @@ const FlashcardQuiz = () => {
       setCurrentKanjiIndex(nextIndex);
       setCurrentKanji(kanjiData[nextIndex]);
     }
-  };
-
-  const toggleLevel = (level) => {
-    setSelectedLevels((prev) =>
-      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]
-    );
   };
 
   const [restored, setRestored] = useState(false);
@@ -99,7 +107,6 @@ const FlashcardQuiz = () => {
         .filter(Boolean);
     }
 
-    setSelectedLevels(restoredLevels);
     setRandomOrder(saved.randomOrder ?? false);
     setKanjiData(reconstructedDeck);
     setCurrentKanjiIndex(saved.currentIndex ?? 0);
@@ -121,10 +128,6 @@ const FlashcardQuiz = () => {
     }
   }, [selectedLevels, restored, quizStarted]);
 
-  const shuffleArray = (array) => {
-    return [...array].sort(() => Math.random() - 0.5);
-  };
-
   useEffect(() => {
     if (!currentKanji) return;
 
@@ -144,11 +147,22 @@ const FlashcardQuiz = () => {
     quizStarted,
   ]);
 
+  useEffect(() => {
+    if (maxCards > maxPossibleCards) {
+      setMaxCards(maxPossibleCards);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxPossibleCards]);
+
   const startFreshQuiz = () => {
     clearSession('flashcard');
 
-    const sortedDeck = getKanjiByLevels(selectedLevels);
-    const finalDeck = randomOrder ? shuffleArray(sortedDeck) : sortedDeck;
+    const finalDeck = buildDeck({
+      levels: selectedLevels,
+      randomOrder,
+      maxAccuracy: maxAccuracyEnabled ? maxAccuracy : null,
+      maxCards: maxCardsEnabled ? maxCards : null,
+    });
 
     setKanjiData(finalDeck);
     setCurrentKanjiIndex(0);
@@ -162,24 +176,15 @@ const FlashcardQuiz = () => {
 
   if (!quizStarted) {
     return (
-      <Card className="max-w-md space-y-6">
-        <h1 className="text-2xl font-bold">Configure Flashcard Session</h1>
-
-        <div className="text-left">
-          <p className="mb-2 font-semibold">Select JLPT Levels:</p>
-          {['5', '4', '3', '2', '1'].map((level) => (
-            <label key={level} className="block mb-1">
-              <input
-                type="checkbox"
-                checked={selectedLevels.includes(level)}
-                onChange={() => toggleLevel(level)}
-                className="mr-2"
-              />
-              JLPT N{level}
-            </label>
-          ))}
-        </div>
-
+      <QuizConfig
+        title="Configure Flashcard Session"
+        selectedLevels={selectedLevels}
+        toggleLevel={toggleLevel}
+        onStart={() => {
+          if (selectedLevels.length === 0) return;
+          startFreshQuiz();
+        }}
+      >
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -189,40 +194,86 @@ const FlashcardQuiz = () => {
           Random Order
         </label>
 
-        <Button
-          variant="primary"
-          onClick={() => {
-            if (selectedLevels.length === 0) return;
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={maxAccuracyEnabled}
+            onChange={() => setMaxAccuracyEnabled((v) => !v)}
+          />
+          Filter by Accuracy (seen)
+        </label>
 
-            startFreshQuiz();
-            setQuizStarted(true);
-          }}
-        >
-          Start Quiz
-        </Button>
-      </Card>
+        {maxAccuracyEnabled && (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-zinc-400">
+              Max Accuracy: {maxAccuracy}%
+            </span>
+
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={maxAccuracy}
+              onChange={(e) => setMaxAccuracy(Number(e.target.value))}
+            />
+          </div>
+        )}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={maxCardsEnabled}
+            onChange={() => setMaxCardsEnabled((v) => !v)}
+          />
+          Limit Deck Size
+        </label>
+
+        {maxCardsEnabled && (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-zinc-400">Max Cards: {maxCards}</span>
+
+            <input
+              type="range"
+              min="1"
+              max={maxPossibleCards}
+              value={maxCards}
+              onChange={(e) => setMaxCards(Number(e.target.value))}
+            />
+          </div>
+        )}
+
+        <p className="text-xs uppercase tracking-wide text-zinc-500">
+          Deck Preview
+        </p>
+
+        <div className="text-sm text-zinc-400 border-t border-white/10 pt-3 space-y-1">
+          <p>Total cards (levels): {maxPossibleCards}</p>
+
+          {maxAccuracyEnabled && <p>After accuracy filter: {predictedCount}</p>}
+
+          {maxCardsEnabled && <p>Deck limit: {maxCards}</p>}
+
+          <p className="font-semibold text-white">
+            Final quiz size: {finalDeckSize}
+          </p>
+        </div>
+      </QuizConfig>
     );
   }
+
   if (quizFinished) {
     return (
       <Card className="max-w-md space-y-6 text-center">
-        <h1 className="text-2xl font-bold">Quiz Complete!</h1>
-        <p className="text-lg">
-          You have finished all {kanjiData.length} cards.
-        </p>
-
-        <Button
-          variant="primary"
-          onClick={() => {
-            // Reset quiz states to show pre-quiz config
+        <QuizSummary
+          title="Flashcard Session Complete"
+          total={kanjiData.length}
+          correct={null}
+          incorrect={null}
+          time={sessionTime}
+          onRestart={() => {
             setQuizStarted(false);
             setQuizFinished(false);
-            setCurrentKanjiIndex(0);
-            setCurrentKanji(kanjiData[0] || null);
           }}
-        >
-          Return to Quiz Setup
-        </Button>
+        />
       </Card>
     );
   }

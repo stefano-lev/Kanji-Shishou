@@ -16,29 +16,25 @@ export const getStatForKanji = (uid) => {
   return stats[uid] ?? createEmptyKanjiStat();
 };
 
-export const recordSeen = (uid) => {
-  const stats = storage.loadStats();
-
-  stats[uid] = {
-    ...(stats[uid] ?? createEmptyKanjiStat()),
-    seen: (stats[uid]?.seen ?? 0) + 1,
-    lastSeen: new Date().toISOString(),
-  };
-
-  storage.saveStats(stats);
-};
-
-export const recordResult = (uid, isCorrect) => {
+export const recordResult = (uid, isCorrect = null) => {
   const stats = storage.loadStats();
   const current = stats[uid] ?? createEmptyKanjiStat();
 
-  stats[uid] = {
+  const updated = {
     ...current,
     seen: current.seen + 1,
-    correct: current.correct + (isCorrect ? 1 : 0),
-    incorrect: current.incorrect + (!isCorrect ? 1 : 0),
     lastSeen: new Date().toISOString(),
   };
+
+  if (isCorrect === true) {
+    updated.correct += 1;
+  }
+
+  if (isCorrect === false) {
+    updated.incorrect += 1;
+  }
+
+  stats[uid] = updated;
 
   storage.saveStats(stats);
 };

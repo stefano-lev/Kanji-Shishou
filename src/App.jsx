@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import FlashcardQuiz from './pages/FlashcardQuiz';
-import MultchoiceQuiz from './pages/MultchoiceQuiz';
-import KanjiDictionary from './pages/KanjiDictionary';
-import SRSReview from './pages/SRSReview';
-import StrokeOrder from './pages/StrokeOrder';
-import AppLayout from './pages/layout/AppLayout';
+import Home from './components/home/Home';
+import FlashcardQuiz from './components/quiz/FlashcardQuiz';
+import MultchoiceQuiz from './components/quiz/MultchoiceQuiz';
+import KanjiDictionary from './components/dictionary/KanjiDictionary';
+import SRSReview from './components/quiz/SRSReview';
+import StrokeOrder from './components/quiz/StrokeOrder';
+import AppLayout from './components/layout/AppLayout';
 
 const App = () => {
   return (

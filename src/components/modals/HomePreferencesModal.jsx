@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import { useState } from 'react';
-import { saveHomePreferences } from '../utils/homePreferences';
+import { saveHomePreferences } from '../../utils/homePreferences';
 
 const HomePreferencesModal = ({ onClose, currentPrefs }) => {
   const [prefs, setPrefs] = useState(currentPrefs);

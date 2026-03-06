@@ -44,3 +44,12 @@ export function recordDailyStudy({ uid, correct, durationSeconds }) {
 
   saveDailyStats(stats);
 }
+
+export function getTotalStudyTimeSeconds() {
+  const stats = getDailyStats();
+
+  return Object.values(stats).reduce(
+    (sum, day) => sum + (day.studyTimeSeconds || 0),
+    0
+  );
+}

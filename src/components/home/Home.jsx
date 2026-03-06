@@ -2,13 +2,16 @@
 
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getAllStats } from '../utils/statsHandler';
-import { getDailyStats } from '../utils/dailyStatsHandler';
+import { getAllStats } from '../../utils/statsHandler';
+import { getDailyStats } from '../../utils/dailyStatsHandler';
 import { useState } from 'react';
-import Card from './ui/Card';
+import Card from '../ui/Card';
 
-import { loadHomePreferences } from '../utils/homePreferences';
-import HomePreferencesModal from './HomePreferencesModal';
+import { loadHomePreferences } from '../../utils/homePreferences';
+import HomePreferencesModal from '../modals/HomePreferencesModal';
+
+import { getTotalStudyTimeSeconds } from '../../utils/dailyStatsHandler';
+import { formatStudyTime } from '../../utils/timeFormatter';
 
 function calculateStreak(dates) {
   let streak = 0;
@@ -194,6 +197,8 @@ const AllTimeStats = () => {
   const totalCorrect = entries.reduce((sum, d) => sum + d.correct, 0);
   const totalIncorrect = entries.reduce((sum, d) => sum + d.incorrect, 0);
 
+  const totalStudyTime = getTotalStudyTimeSeconds();
+
   const accuracy =
     totalCorrect + totalIncorrect > 0
       ? Math.round((totalCorrect / (totalCorrect + totalIncorrect)) * 100)
@@ -203,7 +208,7 @@ const AllTimeStats = () => {
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <h2 className="text-lg font-semibold mb-4">All-Time Statistics</h2>
 
-      <div className="grid md:grid-cols-4 gap-4 text-center">
+      <div className="grid md:grid-cols-5 gap-4 text-center">
         <StatCard
           title="Total Reviews"
           value={totalSeen}
@@ -223,6 +228,12 @@ const AllTimeStats = () => {
           title="Accuracy"
           value={`${accuracy}%`}
           accent="text-blue-400"
+        />
+
+        <StatCard
+          title="Study Time"
+          value={formatStudyTime(totalStudyTime)}
+          accent="text-yellow-400"
         />
       </div>
     </div>

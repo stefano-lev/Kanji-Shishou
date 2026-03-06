@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@/*": ["*"],
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"],
+      "@hooks/*": ["hooks/*"],
+      "@data/*": ["data/*"],
+      "@assets/*": ["assets/*"]
+    }
+  }
+}

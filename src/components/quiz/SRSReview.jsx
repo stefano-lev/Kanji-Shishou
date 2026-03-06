@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 
-import Card from './ui/Card';
-import InfoBlock from './ui/InfoBlock';
-import ProgressBar from './ui/ProgressBar';
-import Button from './ui/Button';
+import Card from '../ui/Card';
+import InfoBlock from '../ui/InfoBlock';
+import ProgressBar from '../ui/ProgressBar';
+import Button from '../ui/Button';
 
-import { kanjiByLevel } from '../data/kanjiData';
-import { recordSeen } from '../utils/statsHandler';
-import { recordDailyStudy } from '../utils/dailyStatsHandler';
+import { kanjiByLevel } from '../../data/kanjiData';
+import { recordResult } from '../../utils/statsHandler';
+import { recordDailyStudy } from '../../utils/dailyStatsHandler';
 import {
   incrementNewStudied,
   incrementReviewStudied,
   loadDailyProgress,
-} from '../utils/dailySRSProgress';
-import SRSOnboarding from './SRSOnboarding';
+} from '../../utils/dailySRSProgress';
+import SRSOnboarding from '../modals/SRSOnboarding';
 import {
   getDueCards,
   reviewCard,
   loadSRS,
   simulateReview,
-} from '../utils/srsHandler';
-import { getAvailableNewCards } from '../utils/srsQueueBuilder';
-import { loadSRSConfig } from '../utils/srsPreferences';
+} from '../../utils/srsHandler';
+import { getAvailableNewCards } from '../../utils/srsQueueBuilder';
+import { loadSRSConfig } from '../../utils/srsPreferences';
 
 const EXTRA_BATCH_SIZE = 15;
 
@@ -127,7 +127,7 @@ const SRSReview = () => {
     setDailyProgressState(loadDailyProgress());
     setSrsData(loadSRS());
 
-    recordSeen(currentUid);
+    recordResult(currentUid);
     recordDailyStudy({ kanji: currentUid, correct: quality >= 3 });
 
     moveToNextCard();

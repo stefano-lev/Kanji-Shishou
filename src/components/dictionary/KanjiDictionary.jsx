@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
-import Card from './ui/Card';
+import Card from '../ui/Card';
 
-import * as storageHandler from '../utils/localStorageHandler';
+import * as storageHandler from '../../utils/localStorageHandler';
 
-import { kanjiByLevel, allKanji } from '../data/kanjiData';
+import { kanjiByLevel, allKanji } from '../../data/kanjiData';
 
-import { recordSeen, getAllStats } from '../utils/statsHandler';
+import { recordResult, getAllStats } from '../../utils/statsHandler';
 
 function normalizeStrokeCount(stroke) {
   if (Array.isArray(stroke)) {
@@ -250,7 +250,7 @@ const KanjiDictionary = () => {
 
   const handleSelectKanji = useCallback((kanji) => {
     setSelectedKanji(kanji);
-    recordSeen(kanji.uid);
+    recordResult(kanji.uid);
   }, []);
 
   return (

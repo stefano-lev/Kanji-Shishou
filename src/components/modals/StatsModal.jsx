@@ -1,8 +1,11 @@
 /* eslint-disable react/prop-types */
 
 import { useState } from 'react';
-import * as storageHandler from '../utils/localStorageHandler';
-import { kanjiByUid } from '../data/kanjiLookup';
+import * as storageHandler from '../../utils/localStorageHandler';
+import { kanjiByUid } from '../../data/kanjiLookup';
+
+import { getTotalStudyTimeSeconds } from '../../utils/dailyStatsHandler';
+import { formatStudyTime } from '../../utils/timeFormatter';
 
 const StatsModal = ({ onClose }) => {
   const stats = storageHandler.loadStats() || {};
@@ -11,6 +14,8 @@ const StatsModal = ({ onClose }) => {
   const totalSeen = entries.reduce((sum, [, d]) => sum + d.seen, 0);
   const totalCorrect = entries.reduce((sum, [, d]) => sum + d.correct, 0);
   const totalIncorrect = entries.reduce((sum, [, d]) => sum + d.incorrect, 0);
+
+  const totalStudyTime = getTotalStudyTimeSeconds();
 
   const overallAccuracy =
     totalCorrect + totalIncorrect > 0
@@ -64,10 +69,11 @@ const StatsModal = ({ onClose }) => {
         </h2>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+        <div className="grid grid-cols-4 gap-4 mb-6 text-center">
           <StatBox label="Total Reviews" value={totalSeen} />
           <StatBox label="Accuracy" value={`${overallAccuracy}%`} />
           <StatBox label="Kanji Studied" value={entries.length} />
+          <StatBox label="Study Time" value={formatStudyTime(totalStudyTime)} />
         </div>
 
         {/* Controls */}

@@ -1,13 +1,12 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
-import Card from '../ui/Card';
+import { kanjiByLevel, allKanji } from '@data/kanjiData';
 
-import * as storageHandler from '../../utils/localStorageHandler';
+import * as storageHandler from '@utils/localStorageHandler';
+import { recordResult, getAllStats } from '@utils/statsHandler';
 
-import { kanjiByLevel, allKanji } from '../../data/kanjiData';
-
-import { recordResult, getAllStats } from '../../utils/statsHandler';
+import Card from '@components/ui/Card';
 
 function normalizeStrokeCount(stroke) {
   if (Array.isArray(stroke)) {
@@ -129,7 +128,7 @@ const KanjiGrid = React.memo(function KanjiGrid({
 });
 
 const KanjiDictionary = () => {
-  const [selectedLevel, setSelectedLevel] = useState('0');
+  const [selectedLevel, setSelectedLevel] = useState('5');
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [filterFavorites, setFilterFavorites] = useState(false);

@@ -1,28 +1,22 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 
-import Card from '../ui/Card';
+import useQuizDeckConfig from '@hooks/useQuizDeckConfig';
 
-import InfoBlock from '../ui/InfoBlock';
-
-import Button from '../ui/Button';
-
-import { getKanjiByLevels, buildDeck } from '../../utils/deckBuilder';
-
-import QuizConfig from '../quiz/QuizConfig';
-
-import QuizSummary from '../quiz/QuizSummary';
-
-import { recordResult } from '../../utils/statsHandler';
-
-import { recordDailyStudy } from '../../utils/dailyStatsHandler';
-
+import { getKanjiByLevels, buildDeck } from '@utils/deckBuilder';
+import { recordResult } from '@utils/statsHandler';
+import { recordDailyStudy } from '@utils/dailyStatsHandler';
 import {
   loadSession,
   saveSession,
   clearSession,
-} from '../../utils/quizSessionHandler';
+} from '@utils/quizSessionHandler';
 
-import useQuizDeckConfig from '../../hooks/useQuizDeckConfig';
+import Card from '@components/ui/Card';
+import InfoBlock from '@components/ui/InfoBlock';
+import Button from '@components/ui/Button';
+
+import QuizConfig from '@components/quiz/QuizConfig';
+import QuizSummary from '@components/quiz/QuizSummary';
 
 const MultchoiceQuiz = () => {
   const [kanjiData, setKanjiData] = useState([]);

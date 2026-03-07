@@ -1,4 +1,5 @@
-import { kanjiByLevel } from '../data/kanjiData';
+import { kanjiByLevel } from '@data/kanjiData';
+
 import { getAllStats } from './statsHandler';
 
 export const getKanjiByLevels = (levels) => {

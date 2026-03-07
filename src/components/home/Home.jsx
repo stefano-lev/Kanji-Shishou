@@ -1,17 +1,17 @@
 /* eslint-disable react/prop-types */
-
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getAllStats } from '../../utils/statsHandler';
-import { getDailyStats } from '../../utils/dailyStatsHandler';
-import { useState } from 'react';
-import Card from '../ui/Card';
 
-import { loadHomePreferences } from '../../utils/homePreferences';
-import HomePreferencesModal from '../modals/HomePreferencesModal';
+import { formatStudyTime } from '@utils/timeFormatter';
+import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
+import { getAllStats } from '@utils/statsHandler';
+import { getDailyStats } from '@utils/dailyStatsHandler';
+import { loadHomePreferences } from '@utils/homePreferences';
 
-import { getTotalStudyTimeSeconds } from '../../utils/dailyStatsHandler';
-import { formatStudyTime } from '../../utils/timeFormatter';
+import Card from '@components/ui/Card';
+
+import HomePreferencesModal from '@components/modals/HomePreferencesModal';
 
 function calculateStreak(dates) {
   let streak = 0;

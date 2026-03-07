@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
+
 import {
   getKanjiCountByLevels,
   getFilteredDeckCount,
-} from '../utils/deckBuilder';
+} from '@utils/deckBuilder';
 
 const useQuizDeckConfig = () => {
   const [selectedLevels, setSelectedLevels] = useState(['5']);

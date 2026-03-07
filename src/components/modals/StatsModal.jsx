@@ -1,11 +1,11 @@
 /* eslint-disable react/prop-types */
-
 import { useState } from 'react';
-import * as storageHandler from '../../utils/localStorageHandler';
-import { kanjiByUid } from '../../data/kanjiLookup';
 
-import { getTotalStudyTimeSeconds } from '../../utils/dailyStatsHandler';
-import { formatStudyTime } from '../../utils/timeFormatter';
+import { kanjiByUid } from '@data/kanjiLookup';
+
+import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
+import * as storageHandler from '@utils/localStorageHandler';
+import { formatStudyTime } from '@utils/timeFormatter';
 
 const StatsModal = ({ onClose }) => {
   const stats = storageHandler.loadStats() || {};

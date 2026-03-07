@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import Card from '@components/ui/Card';
+import Button from '@components/ui/Button';
 
 const QuizConfig = ({
   title,

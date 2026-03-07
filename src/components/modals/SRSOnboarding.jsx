@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-
 import { useState } from 'react';
-import { saveSRSConfig } from '../../utils/srsPreferences';
+
+import { saveSRSConfig } from '@utils/srsPreferences';
 
 const SRSOnboarding = ({ onComplete }) => {
   const [level, setLevel] = useState('5');

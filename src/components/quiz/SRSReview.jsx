@@ -1,27 +1,29 @@
 import { useEffect, useState } from 'react';
 
-import Card from '../ui/Card';
-import InfoBlock from '../ui/InfoBlock';
-import ProgressBar from '../ui/ProgressBar';
-import Button from '../ui/Button';
+import { kanjiByLevel } from '@data/kanjiData';
 
-import { kanjiByLevel } from '../../data/kanjiData';
-import { recordResult } from '../../utils/statsHandler';
-import { recordDailyStudy } from '../../utils/dailyStatsHandler';
+import { recordResult } from '@utils/statsHandler';
+import { recordDailyStudy } from '@utils/dailyStatsHandler';
 import {
   incrementNewStudied,
   incrementReviewStudied,
   loadDailyProgress,
-} from '../../utils/dailySRSProgress';
-import SRSOnboarding from '../modals/SRSOnboarding';
+} from '@utils/dailySRSProgress';
 import {
   getDueCards,
   reviewCard,
   loadSRS,
   simulateReview,
-} from '../../utils/srsHandler';
-import { getAvailableNewCards } from '../../utils/srsQueueBuilder';
-import { loadSRSConfig } from '../../utils/srsPreferences';
+} from '@utils/srsHandler';
+import { getAvailableNewCards } from '@utils/srsQueueBuilder';
+import { loadSRSConfig } from '@utils/srsPreferences';
+
+import Card from '@components/ui/Card';
+import InfoBlock from '@components/ui/InfoBlock';
+import ProgressBar from '@components/ui/ProgressBar';
+import Button from '@components/ui/Button';
+
+import SRSOnboarding from '@components/modals/SRSOnboarding';
 
 const EXTRA_BATCH_SIZE = 15;
 

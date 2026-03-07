@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-
-import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
-import StatsModal from '../modals/StatsModal';
+import { NavLink } from 'react-router-dom';
+
+import StatsModal from '@components/modals/StatsModal';
 
 const NavBar = () => {
   const [showStats, setShowStats] = useState(false);

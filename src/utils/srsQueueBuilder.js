@@ -1,4 +1,5 @@
-import { kanjiByLevel } from '../data/kanjiData';
+import { kanjiByLevel } from '@data/kanjiData';
+
 import { loadSRS } from './srsHandler';
 import { loadSRSConfig } from './srsPreferences';
 

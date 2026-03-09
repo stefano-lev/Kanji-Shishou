@@ -88,24 +88,25 @@ const FlashcardQuiz = () => {
 
   useEffect(() => {
     const saved = loadSession('flashcard');
-    if (!saved) return;
+    if (saved) {
+      const restoredLevels = saved.selectedLevels ??
+        saved.selectedLevel ?? ['5'];
+      const fullData = getKanjiByLevels(restoredLevels);
 
-    const restoredLevels = saved.selectedLevels ?? saved.selectedLevel ?? ['5'];
-    const fullData = getKanjiByLevels(restoredLevels);
+      let reconstructedDeck = fullData;
+      if (saved.deckOrder) {
+        reconstructedDeck = saved.deckOrder
+          .map((uid) => fullData.find((k) => k.uid === uid))
+          .filter(Boolean);
+      }
 
-    let reconstructedDeck = fullData;
-    if (saved.deckOrder) {
-      reconstructedDeck = saved.deckOrder
-        .map((uid) => fullData.find((k) => k.uid === uid))
-        .filter(Boolean);
+      setRandomOrder(saved.randomOrder ?? false);
+      setKanjiData(reconstructedDeck);
+      setCurrentKanjiIndex(saved.currentIndex ?? 0);
+      setCurrentKanji(reconstructedDeck[saved.currentIndex ?? 0] ?? null);
+
+      setQuizStarted(saved.quizStarted ?? false);
     }
-
-    setRandomOrder(saved.randomOrder ?? false);
-    setKanjiData(reconstructedDeck);
-    setCurrentKanjiIndex(saved.currentIndex ?? 0);
-    setCurrentKanji(reconstructedDeck[saved.currentIndex ?? 0] ?? null);
-
-    setQuizStarted(saved.quizStarted ?? false);
 
     setRestored(true);
   }, []);

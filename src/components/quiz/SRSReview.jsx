@@ -57,7 +57,9 @@ const SRSReview = () => {
   }, []);
 
   const buildSessionQueue = (config, ignoreDailyLimits = false) => {
-    const due = getDueCards();
+    const due = getDueCards().sort(
+      (a, b) => new Date(a.nextReview) - new Date(b.nextReview)
+    );
     const newCards = getAvailableNewCards();
 
     let remainingNew = config.newCardsPerDay;
@@ -109,16 +111,12 @@ const SRSReview = () => {
   };
 
   const handleExtraStudy = () => {
-    const srs = loadSRS();
-    const now = new Date();
-
-    const existingNotDue = Object.entries(srs)
-      .filter(([, data]) => new Date(data.nextReview) > now)
-      .map(([uid]) => uid);
+    // const srs = loadSRS();
+    // const now = new Date();
 
     const newCards = getAvailableNewCards();
 
-    const remainingExtra = [...existingNotDue, ...newCards].filter(
+    const remainingExtra = newCards.filter(
       (uid) => !sessionQueue.includes(uid)
     );
 
@@ -134,8 +132,6 @@ const SRSReview = () => {
   const moveToNextCard = () => {
     const nextIndex = currentIndex + 1;
 
-    setRevealed(false);
-
     if (nextIndex >= sessionQueue.length) {
       setMode(MODES.FINISHED);
     } else {
@@ -144,6 +140,8 @@ const SRSReview = () => {
   };
 
   const handleAnswer = (quality) => {
+    setRevealed(false);
+
     const isNew = !srsData[currentUid];
     reviewCard(currentUid, quality);
 
@@ -165,7 +163,11 @@ const SRSReview = () => {
       interval: 0,
       easeFactor: 2.5,
     };
+
     const simulated = simulateReview(baseCard, quality);
+
+    if (simulated.interval === 0) return 'Soon';
+
     return `${simulated.interval} day${simulated.interval > 1 ? 's' : ''}`;
   };
 
@@ -210,7 +212,7 @@ const SRSReview = () => {
     const srs = loadSRS();
 
     return Object.entries(kanjiByLevel)
-      .sort((a, b) => Number(b[0]) - Number(a[0])) // N5 → N1
+      .sort((a, b) => Number(b[0]) - Number(a[0]))
       .map(([level, kanjiList]) => {
         const total = kanjiList.length;
 
@@ -268,7 +270,9 @@ const SRSReview = () => {
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card
+      className={`flex flex-col ${mode === MODES.REVIEW ? 'max-w-5xl' : ''}`}
+    >
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold ">SRS Review</h1>
 
@@ -293,24 +297,24 @@ const SRSReview = () => {
           <h2 className="text-2xl font-semibold">Daily Review</h2>
 
           <div className="grid grid-cols-3 gap-3">
-            <InfoBlock title="Reviews Due">
+            <InfoBlock title="Reviews Due" height="h-20">
               {dashboardStats?.dueCount ?? 0}
             </InfoBlock>
 
-            <InfoBlock title="New Cards Today">
+            <InfoBlock title="New Cards Today" height="h-20">
               {dashboardStats?.newCount ?? 0}
             </InfoBlock>
-            <InfoBlock title="Learning">
+            <InfoBlock title="Learning" height="h-20">
               {dashboardStats?.learningCount ?? 0}
             </InfoBlock>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <InfoBlock title="Studied Today">
+            <InfoBlock title="Studied Today" height="h-20">
               {dashboardStats?.studiedToday ?? 0}
             </InfoBlock>
 
-            <InfoBlock title="Total Cards">
+            <InfoBlock title="Total Cards" height="h-20">
               {dashboardStats?.totalCards ?? 0}
             </InfoBlock>
           </div>
@@ -341,11 +345,13 @@ const SRSReview = () => {
             <h3 className="text-lg font-semibold">JLPT Level Progress</h3>
 
             <div className="text-sm text-zinc-400 border-t border-white/10 pt-3 space-y-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ">
-                {levelProgress.map((lvl) => (
+              <div className="grid grid-cols-2 gap-3">
+                {levelProgress.map((lvl, index) => (
                   <div
                     key={lvl.level}
-                    className="bg-zinc-900/60 border border-white/10 rounded-xl p-4"
+                    className={`bg-zinc-900/60 border border-white/10 rounded-xl p-5 ${
+                      index === 4 ? 'col-span-2' : ''
+                    }`}
                   >
                     <div className="flex justify-between text-sm font-semibold mb-1">
                       <span>JLPT N{lvl.level}</span>
@@ -367,8 +373,11 @@ const SRSReview = () => {
         </div>
       )}
       {mode === MODES.REVIEW && currentKanji && (
-        <div className="space-y-4 text-center">
-          <div className="text-center flex flex-col items-center space-y-2">
+        <div
+          key={currentUid}
+          className="flex flex-col items-center text-center gap-2"
+        >
+          <div className="text-center flex flex-col items-center">
             <p className="text-lg font-bold text-center">
               Card {currentIndex + 1} / {sessionQueue.length}
             </p>
@@ -379,63 +388,63 @@ const SRSReview = () => {
             ></ProgressBar>
           </div>
 
-          <div className="w-full max-w-md mx-auto bg-zinc-900/70 border border-white/10 rounded-2xl py-12 flex items-center justify-center shadow-inner">
-            <span className="text-7xl sm:text-8xl font-bold tracking-wide">
+          <div className="w-full max-w-md mx-auto bg-zinc-900/70 border border-white/10 rounded-2xl py-4 flex items-center justify-center shadow-inner animate-fade-in">
+            <span className="text-[4rem] sm:text-[5rem] md:text-[6rem] font-bold tracking-wide">
               {currentKanji.literal}
             </span>
           </div>
 
-          <div className="min-h-[300px] flex flex-col justify-center gap-y-2">
-            {!revealed && (
-              <Button
-                variant="primary"
-                className="mx-auto mt-4"
-                onClick={() => setRevealed(true)}
-              >
-                Reveal Answer
-              </Button>
-            )}
-
-            {revealed && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoBlock title="Kun-yomi">
-                    {currentKanji.reading_meaning.rmgroup.reading
-                      .filter((r) => r['@r_type'] === 'ja_kun')
-                      .map((r) => r['#text'])
-                      .join(', ') || 'None'}
-                  </InfoBlock>
-
-                  <InfoBlock title="On-yomi">
-                    {currentKanji.reading_meaning.rmgroup.reading
-                      .filter((r) => r['@r_type'] === 'ja_on')
-                      .map((r) => r['#text'])
-                      .join(', ') || 'None'}
-                  </InfoBlock>
-                </div>
-
-                <InfoBlock title="Meanings">
-                  {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
-                    'None'}
+          <div className="w-full max-w-md mx-auto flex flex-col gap-4">
+            <div
+              className={`space-y-4 w-full transition-opacity duration-200 ${revealed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <InfoBlock title="Kun-yomi" height="h-24">
+                  {currentKanji.reading_meaning.rmgroup.reading
+                    .filter((r) => r['@r_type'] === 'ja_kun')
+                    .map((r) => r['#text'])
+                    .join(', ') || 'None'}
                 </InfoBlock>
 
-                <div className="grid grid-cols-4 gap-4">
-                  {answerOptions.map((option) => (
-                    <Button
-                      key={option.value}
-                      variant={option.variant}
-                      className="rounded-xl shadow-lg"
-                      onClick={() => handleAnswer(option.value)}
-                    >
-                      <div className="font-semibold">{option.label}</div>
-                      <div className="text-xs opacity-70 mt-1">
-                        {previewInterval(option.value)}
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </>
-            )}
+                <InfoBlock title="On-yomi" height="h-24">
+                  {currentKanji.reading_meaning.rmgroup.reading
+                    .filter((r) => r['@r_type'] === 'ja_on')
+                    .map((r) => r['#text'])
+                    .join(', ') || 'None'}
+                </InfoBlock>
+              </div>
+
+              <InfoBlock title="Meanings" height="h-24">
+                {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                  'None'}
+              </InfoBlock>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 min-h-[72px]">
+              {!revealed ? (
+                <Button
+                  variant="primary"
+                  className="col-span-2 sm:col-span-4 py-5 rounded-xl shadow-lg font-semibold"
+                  onClick={() => setRevealed(true)}
+                >
+                  Reveal Answer
+                </Button>
+              ) : (
+                answerOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={option.variant}
+                    className="rounded-xl shadow-lg py-3"
+                    onClick={() => handleAnswer(option.value)}
+                  >
+                    <div className="font-semibold">{option.label}</div>
+                    <div className="text-xs opacity-70 mt-1">
+                      {previewInterval(option.value)}
+                    </div>
+                  </Button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

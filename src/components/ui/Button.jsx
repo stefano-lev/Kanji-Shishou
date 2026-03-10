@@ -5,7 +5,7 @@ const Button = ({
   className = '',
   ...props
 }) => {
-  const base = 'rounded-lg px-4 py-2 font-medium transition';
+  const base = 'rounded-lg px-4 py-3 font-medium transition';
 
   const variants = {
     primary: 'bg-blue-600 hover:bg-blue-500',

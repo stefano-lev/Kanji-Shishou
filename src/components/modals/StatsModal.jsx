@@ -6,14 +6,42 @@ import { kanjiByUid } from '@data/kanjiLookup';
 import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
 import * as storageHandler from '@utils/localStorageHandler';
 import { formatStudyTime } from '@utils/timeFormatter';
+import { loadSRS } from '@utils/srsHandler';
+import { loadStatsPreferences } from '@utils/statsPreferences';
 
-const StatsModal = ({ onClose }) => {
+import StatsPreferencesModal from '@components/modals/StatsPreferencesModal';
+
+const StatsModal = ({
+  onClose,
+  initialLevel = 'all',
+  initialMode = 'global',
+}) => {
   const stats = storageHandler.loadStats() || {};
+  const srsData = loadSRS();
+  const [statsMode, setStatsMode] = useState(initialMode);
+  const [prefs, setPrefs] = useState(loadStatsPreferences());
+  const [showPrefsModal, setShowPrefsModal] = useState(false);
   const entries = Object.entries(stats);
 
-  const totalSeen = entries.reduce((sum, [, d]) => sum + d.seen, 0);
-  const totalCorrect = entries.reduce((sum, [, d]) => sum + d.correct, 0);
-  const totalIncorrect = entries.reduce((sum, [, d]) => sum + d.incorrect, 0);
+  const getSource = (data) => {
+    if (statsMode === 'srs') {
+      return data.srs ?? { seen: 0, correct: 0, incorrect: 0 };
+    }
+
+    return data;
+  };
+
+  const totalSeen = entries.reduce((sum, [, d]) => sum + getSource(d).seen, 0);
+
+  const totalCorrect = entries.reduce(
+    (sum, [, d]) => sum + getSource(d).correct,
+    0
+  );
+
+  const totalIncorrect = entries.reduce(
+    (sum, [, d]) => sum + getSource(d).incorrect,
+    0
+  );
 
   const totalStudyTime = getTotalStudyTimeSeconds();
 
@@ -23,25 +51,33 @@ const StatsModal = ({ onClose }) => {
       : 0;
 
   const [sortBy, setSortBy] = useState('uid');
-  const [filterLevel, setFilterLevel] = useState('all');
+  const [filterLevel, setFilterLevel] = useState(initialLevel);
+
+  const studiedCount =
+    statsMode === 'srs'
+      ? entries.filter(([, d]) => (d.srs?.seen ?? 0) > 0).length
+      : entries.length;
 
   const sortedEntries = [...entries].sort((a, b) => {
     const [, dataA] = a;
     const [, dataB] = b;
 
+    const statA = getSource(dataA);
+    const statB = getSource(dataB);
+
     switch (sortBy) {
       case 'seen':
-        return dataB.seen - dataA.seen;
+        return statB.seen - statA.seen;
 
       case 'low-accuracy': {
-        const accA = dataA.correct / (dataA.correct + dataA.incorrect || 1);
-        const accB = dataB.correct / (dataB.correct + dataB.incorrect || 1);
+        const accA = statA.correct / (statA.correct + statA.incorrect || 1);
+        const accB = statB.correct / (statB.correct + statB.incorrect || 1);
         return accA - accB;
       }
 
       case 'high-accuracy': {
-        const accA = dataA.correct / (dataA.correct + dataA.incorrect || 1);
-        const accB = dataB.correct / (dataB.correct + dataB.incorrect || 1);
+        const accA = statA.correct / (statA.correct + statA.incorrect || 1);
+        const accB = statB.correct / (statB.correct + statB.incorrect || 1);
         return accB - accA;
       }
 
@@ -53,8 +89,15 @@ const StatsModal = ({ onClose }) => {
     }
   });
 
-  const filteredEntries = sortedEntries.filter(([uid]) => {
+  const filteredEntries = sortedEntries.filter(([uid, data]) => {
+    const source = getSource(data);
+
+    if (statsMode === 'srs' && source.seen === 0) {
+      return false;
+    }
+
     if (filterLevel === 'all') return true;
+
     return kanjiByUid[uid]?.misc.jlpt === filterLevel;
   });
 
@@ -65,14 +108,25 @@ const StatsModal = ({ onClose }) => {
     >
       <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
         <h2 className="text-white text-2xl font-bold mb-6 text-center">
-          Study Statistics
+          {statsMode === 'srs'
+            ? 'SRS Review Statistics'
+            : 'All Study Statistics'}
         </h2>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowPrefsModal(true)}
+            className="absolute -top-12 right-2 text-zinc-400 hover:text-white"
+          >
+            ⚙️
+          </button>
+        </div>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6 text-center">
           <StatBox label="Total Reviews" value={totalSeen} />
           <StatBox label="Accuracy" value={`${overallAccuracy}%`} />
-          <StatBox label="Kanji Studied" value={entries.length} />
+          <StatBox label="Kanji Studied" value={studiedCount} />
           <StatBox label="Study Time" value={formatStudyTime(totalStudyTime)} />
         </div>
 
@@ -87,6 +141,15 @@ const StatsModal = ({ onClose }) => {
             <option value="high-accuracy">Highest Accuracy</option>
             <option value="seen">Most Seen</option>
             <option value="uid">UID</option>
+          </select>
+
+          <select
+            value={statsMode}
+            onChange={(e) => setStatsMode(e.target.value)}
+            className="bg-zinc-800 border border-white/10 rounded px-3 py-2 text-white"
+          >
+            <option value="global">All Study</option>
+            <option value="srs">SRS Only</option>
           </select>
 
           <select
@@ -109,17 +172,20 @@ const StatsModal = ({ onClose }) => {
         ) : (
           <div className="space-y-2">
             {filteredEntries.map(([uid, data]) => {
+              const source = getSource(data);
+
               const accuracy =
-                data.correct + data.incorrect > 0
+                source.correct + source.incorrect > 0
                   ? Math.round(
-                      (data.correct / (data.correct + data.incorrect)) * 100
+                      (source.correct / (source.correct + source.incorrect)) *
+                        100
                     )
                   : 0;
 
               return (
                 <div
                   key={uid}
-                  className="relative grid grid-cols-[80px_1fr_120px] items-center bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm overflow-hidden hover:bg-white/10 transition"
+                  className="relative grid grid-cols-[70px_1fr_160px] items-center bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm overflow-hidden hover:bg-white/10 hover:scale-[1.01] transition"
                 >
                   <div className="text-3xl font-bold text-white">
                     {kanjiByUid[uid]?.literal ?? '？'}
@@ -130,8 +196,61 @@ const StatsModal = ({ onClose }) => {
                   </div>
 
                   <div className="text-right text-zinc-400 tabular-nums">
-                    <div>Seen: {data.seen}</div>
-                    <div>Accuracy: {accuracy}%</div>
+                    <div>Seen: {source.seen}</div>
+                    <div
+                      className={
+                        accuracy >= 85
+                          ? 'text-green-400'
+                          : accuracy >= 60
+                            ? 'text-yellow-400'
+                            : 'text-red-400'
+                      }
+                    >
+                      Accuracy: {accuracy}%
+                    </div>
+                    {statsMode === 'srs' && srsData[uid] && (
+                      <div className="text-xs text-zinc-500 mt-1 flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                          {prefs.showPhase && (
+                            <span
+                              className={`px-2 py-[2px] rounded text-[10px] font-semibold uppercase tracking-wide
+                              ${
+                                srsData[uid].phase === 'learning'
+                                  ? 'bg-yellow-400/20 text-yellow-300'
+                                  : 'bg-red-400/20 text-red-300'
+                              }
+                            `}
+                            >
+                              {srsData[uid].phase}
+                            </span>
+                          )}
+                          {prefs.showInterval && (
+                            <>
+                              {srsData[uid].phase === 'learning'
+                                ? `Step ${srsData[uid].step + 1}`
+                                : `Interval ${srsData[uid].interval}d`}
+                            </>
+                          )}
+
+                          {prefs.showEaseFactor && (
+                            <> • EF {srsData[uid].easeFactor.toFixed(2)}</>
+                          )}
+
+                          {prefs.showRepetitions && (
+                            <> • Rep {srsData[uid].repetitions}</>
+                          )}
+                        </div>
+
+                        {prefs.showNextReview && (
+                          <div>
+                            Next{' '}
+                            {new Date(
+                              srsData[uid].nextReview
+                            ).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -146,6 +265,15 @@ const StatsModal = ({ onClose }) => {
           Close
         </button>
       </div>
+      {showPrefsModal && (
+        <StatsPreferencesModal
+          currentPrefs={prefs}
+          onClose={(updatedPrefs) => {
+            if (updatedPrefs) setPrefs(updatedPrefs);
+            setShowPrefsModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

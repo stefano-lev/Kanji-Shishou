@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 
 import { kanjiByLevel } from '@data/kanjiData';
 
-import { recordResult } from '@utils/statsHandler';
+import { recordResult, recordSRSResult } from '@utils/statsHandler';
 import { recordDailyStudy } from '@utils/dailyStatsHandler';
 import {
   incrementNewStudied,
@@ -24,6 +24,7 @@ import ProgressBar from '@components/ui/ProgressBar';
 import Button from '@components/ui/Button';
 
 import SRSOnboarding from '@components/modals/SRSOnboarding';
+import StatsModal from '@components/modals/StatsModal';
 
 const EXTRA_BATCH_SIZE = 15;
 const MODES = {
@@ -47,6 +48,10 @@ const SRSReview = () => {
   const currentCardData = currentUid ? srsData[currentUid] : null;
   const [revealed, setRevealed] = useState(false);
 
+  const [statsLevelFilter, setStatsLevelFilter] = useState(null);
+
+  const cardStartTimeRef = useRef(Date.now());
+
   const kanjiMap = useMemo(() => {
     return Object.values(kanjiByLevel)
       .flat()
@@ -57,8 +62,10 @@ const SRSReview = () => {
   }, []);
 
   const buildSessionQueue = (config, ignoreDailyLimits = false) => {
+    const srs = loadSRS();
+
     const due = getDueCards().sort(
-      (a, b) => new Date(a.nextReview) - new Date(b.nextReview)
+      (a, b) => new Date(srs[a]?.nextReview) - new Date(srs[b]?.nextReview)
     );
     const newCards = getAvailableNewCards();
 
@@ -111,22 +118,36 @@ const SRSReview = () => {
   };
 
   const handleExtraStudy = () => {
-    // const srs = loadSRS();
-    // const now = new Date();
+    const srs = loadSRS();
+
+    const due = getDueCards();
+
+    const learningCards = Object.entries(srs)
+      .filter(([, card]) => card.phase === 'learning')
+      .map(([uid]) => uid);
 
     const newCards = getAvailableNewCards();
 
-    const remainingExtra = newCards.filter(
-      (uid) => !sessionQueue.includes(uid)
-    );
+    const inSession = new Set(sessionQueue);
 
-    if (remainingExtra.length === 0) return;
+    const extraDue = due.filter((uid) => !inSession.has(uid));
+    const extraLearning = learningCards.filter((uid) => !inSession.has(uid));
+    const extraNew = newCards.filter((uid) => !inSession.has(uid));
 
-    const nextBatch = remainingExtra.slice(0, EXTRA_BATCH_SIZE);
+    const combined = [...extraDue, ...extraLearning, ...extraNew];
 
-    setSessionQueue(nextBatch);
-    setCurrentIndex(0);
-    setMode(MODES.REVIEW);
+    if (combined.length === 0) return;
+
+    const nextBatch = combined.slice(0, EXTRA_BATCH_SIZE);
+
+    if (mode === MODES.REVIEW && sessionQueue.length > 0) {
+      setSessionQueue((prev) => [...prev, ...nextBatch]);
+    } else {
+      setSrsData(loadSRS());
+      setSessionQueue(nextBatch);
+      setCurrentIndex(0);
+      setMode(MODES.REVIEW);
+    }
   };
 
   const moveToNextCard = () => {
@@ -136,23 +157,59 @@ const SRSReview = () => {
       setMode(MODES.FINISHED);
     } else {
       setCurrentIndex(nextIndex);
+      setRevealed(false);
     }
   };
 
-  const handleAnswer = (quality) => {
-    setRevealed(false);
+  const reinsertCardLater = (uid) => {
+    const insertionOffset = 5;
 
+    setSessionQueue((prev) => {
+      const newQueue = [...prev];
+
+      const insertIndex = Math.min(
+        currentIndex + insertionOffset,
+        newQueue.length
+      );
+
+      newQueue.splice(insertIndex, 0, uid);
+
+      return newQueue;
+    });
+  };
+
+  const handleAnswer = (quality) => {
+    const durationSeconds = Math.max(
+      1,
+      Math.floor((Date.now() - cardStartTimeRef.current) / 1000)
+    );
+
+    const isCorrect = quality >= 3;
     const isNew = !srsData[currentUid];
+
     reviewCard(currentUid, quality);
 
-    if (isNew) incrementNewStudied();
-    else incrementReviewStudied();
+    if (quality === 2) {
+      reinsertCardLater(currentUid);
+    }
+
+    if (isNew) {
+      incrementNewStudied();
+    } else {
+      incrementReviewStudied();
+    }
 
     setDailyProgressState(loadDailyProgress());
     setSrsData(loadSRS());
 
-    recordResult(currentUid);
-    recordDailyStudy({ kanji: currentUid, correct: quality >= 3 });
+    recordResult(currentUid, isCorrect); // global stats
+    recordSRSResult(currentUid, isCorrect); // SRS-only stats
+
+    recordDailyStudy({
+      kanji: currentUid,
+      correct: isCorrect,
+      durationSeconds,
+    });
 
     moveToNextCard();
   };
@@ -241,6 +298,12 @@ const SRSReview = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (currentUid) {
+      cardStartTimeRef.current = Date.now();
+    }
+  }, [currentUid]);
+
   const answerOptions = [
     {
       value: 2,
@@ -300,12 +363,11 @@ const SRSReview = () => {
             <InfoBlock title="Reviews Due" height="h-20">
               {dashboardStats?.dueCount ?? 0}
             </InfoBlock>
-
-            <InfoBlock title="New Cards Today" height="h-20">
-              {dashboardStats?.newCount ?? 0}
-            </InfoBlock>
             <InfoBlock title="Learning" height="h-20">
               {dashboardStats?.learningCount ?? 0}
+            </InfoBlock>
+            <InfoBlock title="New Cards Today" height="h-20">
+              {dashboardStats?.newCount ?? 0}
             </InfoBlock>
           </div>
 
@@ -349,7 +411,8 @@ const SRSReview = () => {
                 {levelProgress.map((lvl, index) => (
                   <div
                     key={lvl.level}
-                    className={`bg-zinc-900/60 border border-white/10 rounded-xl p-5 ${
+                    onClick={() => setStatsLevelFilter(lvl.level)}
+                    className={`cursor-pointer bg-zinc-900/60 border border-white/10 rounded-xl p-5 hover:bg-zinc-800 transition ${
                       index === 4 ? 'col-span-2' : ''
                     }`}
                   >
@@ -470,6 +533,14 @@ const SRSReview = () => {
             )}
           </div>
         </div>
+      )}
+
+      {statsLevelFilter && (
+        <StatsModal
+          initialLevel={statsLevelFilter}
+          initialMode="srs"
+          onClose={() => setStatsLevelFilter(null)}
+        />
       )}
     </Card>
   );

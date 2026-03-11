@@ -5,6 +5,13 @@ export const createEmptyKanjiStat = () => ({
   correct: 0,
   incorrect: 0,
   lastSeen: null,
+
+  srs: {
+    seen: 0,
+    correct: 0,
+    incorrect: 0,
+    lastSeen: null,
+  },
 });
 
 export const getAllStats = () => {
@@ -35,6 +42,34 @@ export const recordResult = (uid, isCorrect = null) => {
   }
 
   stats[uid] = updated;
+
+  storage.saveStats(stats);
+};
+
+export const recordSRSResult = (uid, isCorrect = null) => {
+  const stats = storage.loadStats();
+  const current = stats[uid] ?? createEmptyKanjiStat();
+
+  const srs = current.srs ?? {
+    seen: 0,
+    correct: 0,
+    incorrect: 0,
+    lastSeen: null,
+  };
+
+  const updatedSRS = {
+    ...srs,
+    seen: srs.seen + 1,
+    lastSeen: new Date().toISOString(),
+  };
+
+  if (isCorrect === true) updatedSRS.correct += 1;
+  if (isCorrect === false) updatedSRS.incorrect += 1;
+
+  stats[uid] = {
+    ...current,
+    srs: updatedSRS,
+  };
 
   storage.saveStats(stats);
 };

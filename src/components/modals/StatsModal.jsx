@@ -4,24 +4,67 @@ import { useState } from 'react';
 import { kanjiByUid } from '@data/kanjiLookup';
 
 import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
-import * as storageHandler from '@utils/localStorageHandler';
+import {
+  loadStats,
+  exportAllData,
+  importAllData,
+} from '@utils/localStorageHandler';
 import { formatStudyTime } from '@utils/timeFormatter';
 import { loadSRS } from '@utils/srsHandler';
 import { loadStatsPreferences } from '@utils/statsPreferences';
 
 import StatsPreferencesModal from '@components/modals/StatsPreferencesModal';
+import SnapshotModal from '@components/modals/SnapshotModal';
 
 const StatsModal = ({
   onClose,
   initialLevel = 'all',
   initialMode = 'global',
 }) => {
-  const stats = storageHandler.loadStats() || {};
+  const stats = loadStats() || {};
   const srsData = loadSRS();
   const [statsMode, setStatsMode] = useState(initialMode);
   const [prefs, setPrefs] = useState(loadStatsPreferences());
   const [showPrefsModal, setShowPrefsModal] = useState(false);
+  const [showSnapshots, setShowSnapshots] = useState(false);
   const entries = Object.entries(stats);
+
+  const handleExport = () => {
+    const data = exportAllData();
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kanji-backup-${new Date().toISOString()}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        importAllData(data);
+
+        alert('Backup restored! Reloading...');
+        window.location.reload();
+      } catch {
+        alert('Invalid backup file.');
+      }
+    };
+
+    reader.readAsText(file);
+  };
 
   const getSource = (data) => {
     if (statsMode === 'srs') {
@@ -107,19 +150,51 @@ const StatsModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
-        <h2 className="text-white text-2xl font-bold mb-6 text-center">
-          {statsMode === 'srs'
-            ? 'SRS Review Statistics'
-            : 'All Study Statistics'}
-        </h2>
+        <div className="relative flex items-center justify-end mb-6">
+          <h2 className="absolute left-1/2 -translate-x-1/2 text-white text-2xl font-bold">
+            {statsMode === 'srs'
+              ? 'SRS Review Statistics'
+              : 'All Study Statistics'}
+          </h2>
 
-        <div className="relative">
-          <button
-            onClick={() => setShowPrefsModal(true)}
-            className="absolute -top-12 right-2 text-zinc-400 hover:text-white"
-          >
-            ⚙️
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              title="Export Backup"
+              className="text-zinc-400 hover:text-blue-400 transition text-lg"
+            >
+              ⬇️
+            </button>
+
+            <label
+              title="Import Backup"
+              className="text-zinc-400 hover:text-green-400 transition text-lg cursor-pointer"
+            >
+              ⬆️
+              <input
+                type="file"
+                accept="application/json"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </label>
+
+            <button
+              onClick={() => setShowSnapshots(true)}
+              title="View Snapshots"
+              className="text-zinc-400 hover:text-purple-400 transition text-lg"
+            >
+              🗂️
+            </button>
+
+            <button
+              onClick={() => setShowPrefsModal(true)}
+              title="Preferences"
+              className="text-zinc-400 hover:text-white transition text-lg"
+            >
+              ⚙️
+            </button>
+          </div>
         </div>
 
         {/* Summary Stats */}
@@ -273,6 +348,10 @@ const StatsModal = ({
             setShowPrefsModal(false);
           }}
         />
+      )}
+
+      {showSnapshots && (
+        <SnapshotModal onClose={() => setShowSnapshots(false)} />
       )}
     </div>
   );

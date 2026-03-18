@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -8,6 +8,7 @@ import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
 import { getAllStats } from '@utils/statsHandler';
 import { getDailyStats } from '@utils/dailyStatsHandler';
 import { loadHomePreferences } from '@utils/homePreferences';
+import { saveSnapshot } from '@utils/localStorageHandler';
 
 import Card from '@components/ui/Card';
 
@@ -53,6 +54,16 @@ const Home = () => {
   const dayData = selectedDay ? dailyStats[selectedDay] : null;
 
   const todayISO = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    const last = localStorage.getItem('lastSnapshot');
+    const now = Date.now();
+
+    if (!last || now - Number(last) > 7 * 24 * 60 * 60 * 1000) {
+      saveSnapshot();
+      localStorage.setItem('lastSnapshot', now);
+    }
+  }, []);
 
   return (
     <Card className="space-y-8">

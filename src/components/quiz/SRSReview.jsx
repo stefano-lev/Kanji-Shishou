@@ -17,6 +17,7 @@ import {
 } from '@utils/srsHandler';
 import { getAvailableNewCards } from '@utils/srsQueueBuilder';
 import { loadSRSConfig } from '@utils/srsPreferences';
+import { getSafeKanji } from '@utils/kanjiUtils';
 
 import Card from '@components/ui/Card';
 import InfoBlock from '@components/ui/InfoBlock';
@@ -285,7 +286,7 @@ const SRSReview = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [srsData]);
 
-  const currentKanji = kanjiMap[currentUid];
+  const currentKanji = getSafeKanji(kanjiMap[currentUid]);
 
   useEffect(() => {
     const storedConfig = loadSRSConfig();

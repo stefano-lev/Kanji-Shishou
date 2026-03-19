@@ -10,6 +10,7 @@ import {
   saveSession,
   clearSession,
 } from '@utils/quizSessionHandler';
+import { getSafeKanji } from '@utils/kanjiUtils';
 
 import Card from '@components/ui/Card';
 import InfoBlock from '@components/ui/InfoBlock';
@@ -272,6 +273,8 @@ const FlashcardQuiz = () => {
     );
   }
 
+  const safeKanji = getSafeKanji(currentKanji);
+
   return (
     <Card className="space-y-2">
       {/* Header */}
@@ -307,24 +310,24 @@ const FlashcardQuiz = () => {
         ></ProgressBar>
       </div>
 
-      {currentKanji && (
+      {safeKanji && (
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-full max-w-md mx-auto bg-zinc-900/70 border border-white/10 rounded-2xl py-12 flex items-center justify-center shadow-inner">
             <span className="text-7xl sm:text-8xl font-bold tracking-wide">
-              {currentKanji.literal}
+              {safeKanji.literal}
             </span>
           </div>
 
           <div className="w-full max-w-md mx-auto space-y-3">
             <div className="grid grid-cols-2 gap-4 items-stretch">
               <InfoBlock title="Kun-yomi">
-                {currentKanji.reading_meaning.rmgroup.reading
+                {safeKanji.reading_meaning.rmgroup.reading
                   .filter((r) => r['@r_type'] === 'ja_kun')
                   .map((r) => r['#text'])
                   .join(', ') || 'None'}
               </InfoBlock>
               <InfoBlock title="On-yomi">
-                {currentKanji.reading_meaning.rmgroup.reading
+                {safeKanji.reading_meaning.rmgroup.reading
                   .filter((r) => r['@r_type'] === 'ja_on')
                   .map((r) => r['#text'])
                   .join(', ') || 'None'}
@@ -332,8 +335,7 @@ const FlashcardQuiz = () => {
             </div>
 
             <InfoBlock title="Meanings">
-              {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
-                'None'}
+              {safeKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
             </InfoBlock>
           </div>
         </div>

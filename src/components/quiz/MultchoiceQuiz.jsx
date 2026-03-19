@@ -10,6 +10,7 @@ import {
   saveSession,
   clearSession,
 } from '@utils/quizSessionHandler';
+import { getSafeKanji } from '@utils/kanjiUtils';
 
 import Card from '@components/ui/Card';
 import InfoBlock from '@components/ui/InfoBlock';
@@ -348,6 +349,8 @@ const MultchoiceQuiz = () => {
     );
   }
 
+  const safeKanji = getSafeKanji(currentKanji);
+
   return (
     <Card className="flex flex-col">
       {/* Header */}
@@ -381,14 +384,14 @@ const MultchoiceQuiz = () => {
         <div className="w-full max-w-md mx-auto space-y-3">
           <div className="grid grid-cols-2 gap-4 items-stretch">
             <InfoBlock title="Kun-yomi">
-              {currentKanji.reading_meaning.rmgroup.reading
+              {safeKanji.reading_meaning.rmgroup.reading
                 .filter((r) => r['@r_type'] === 'ja_kun')
                 .map((r) => r['#text'])
                 .join(', ') || 'None'}
             </InfoBlock>
 
             <InfoBlock title="On-yomi">
-              {currentKanji.reading_meaning.rmgroup.reading
+              {safeKanji.reading_meaning.rmgroup.reading
                 .filter((r) => r['@r_type'] === 'ja_on')
                 .map((r) => r['#text'])
                 .join(', ') || 'None'}
@@ -396,7 +399,7 @@ const MultchoiceQuiz = () => {
           </div>
 
           <InfoBlock title="Meanings">
-            {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
+            {safeKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
           </InfoBlock>
         </div>
       </div>
@@ -404,16 +407,20 @@ const MultchoiceQuiz = () => {
       {/* Footer */}
       <div className="flex-shrink-0 pt-2">
         <div className="grid grid-cols-4 gap-3 max-w-xl mx-auto">
-          {choices.map((choice, idx) => (
-            <button
-              key={idx}
-              disabled={isButtonDisabled}
-              onClick={() => handleAnswer(choice)}
-              className="rounded-xl bg-blue-600 hover:bg-blue-500 transition text-base font-semibold py-2 disabled:opacity-50"
-            >
-              {choice.literal}
-            </button>
-          ))}
+          {choices.map((choice, idx) => {
+            const safeChoice = getSafeKanji(choice);
+
+            return (
+              <button
+                key={idx}
+                disabled={isButtonDisabled}
+                onClick={() => handleAnswer(choice)}
+                className="rounded-xl bg-blue-600 hover:bg-blue-500 transition text-base font-semibold py-2 disabled:opacity-50"
+              >
+                {safeChoice.literal}
+              </button>
+            );
+          })}
         </div>
 
         <div className="min-h-[2rem] flex items-center justify-center mt-4">

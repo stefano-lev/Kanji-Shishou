@@ -4,12 +4,25 @@ import jlpt3 from './jlpt_level_3.json';
 import jlpt2 from './jlpt_level_2.json';
 import jlpt1 from './jlpt_level_1.json';
 
+const normalizeKanji = (k) => ({
+  literal: '？',
+  reading_meaning: {
+    rmgroup: {
+      reading: [],
+      meaning: [],
+    },
+  },
+  ...k,
+});
+
 const addLevelPrefix = (level, data) =>
-  data.map((k) => ({
-    ...k,
-    uid: `${level}-${k.id}`,
-    level: level,
-  }));
+  data.map((k) =>
+    normalizeKanji({
+      ...k,
+      uid: `${level}-${k.id}`,
+      level: level,
+    })
+  );
 
 export const kanjiByLevel = {
   5: addLevelPrefix(5, jlpt5),

@@ -46,7 +46,8 @@ This project is still under active development, so new features and updates will
 ## Credits
 
 - [nlohmann's JSON library](https://github.com/nlohmann/json) (used for development utilities)
-- [kanjidic2's kanji database](https://www.edrdg.org/kanjidic/kanjd2index_legacy.html)
+- [KANJIDIC2](https://www.edrdg.org/kanjidic/kanjd2index_legacy.html) – Kanji database
+- [KanjiVG](https://kanjivg.tagaini.net/) – Kanji stroke order SVG data
 
 ---
 

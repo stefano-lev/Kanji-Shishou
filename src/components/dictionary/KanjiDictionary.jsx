@@ -8,6 +8,8 @@ import { recordResult, getAllStats } from '@utils/statsHandler';
 
 import Card from '@components/ui/Card';
 
+import KanjiStrokeViewer from '../kanji/KanjiStrokeViewer';
+
 function normalizeStrokeCount(stroke) {
   if (Array.isArray(stroke)) {
     return Number(stroke[0]);
@@ -327,9 +329,12 @@ const KanjiDictionary = () => {
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             {/* HEADER */}
             <div className="text-center mb-2">
-              <h2 className="text-6xl font-bold">{selectedKanji.literal}</h2>
+              {/* <h2 className="text-6xl font-bold">{selectedKanji.literal}</h2> */}
 
-              <p className="mt-2 text-zinc-300 text-lg">
+              {/* Use KanjiVG rendering rather than plaintext */}
+              <KanjiStrokeViewer kanji={selectedKanji} />
+
+              <p className="mt-4 text-zinc-300 text-lg">
                 {selectedKanji.reading_meaning.rmgroup.meaning?.join(', ')}
               </p>
             </div>

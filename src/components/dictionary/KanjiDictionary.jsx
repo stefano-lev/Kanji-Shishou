@@ -254,6 +254,45 @@ const KanjiDictionary = () => {
     recordResult(kanji.uid);
   }, []);
 
+  const currentIndex = useMemo(() => {
+    if (!selectedKanji) return -1;
+    return sortedKanjiData.findIndex((k) => k.uid === selectedKanji.uid);
+  }, [selectedKanji, sortedKanjiData]);
+
+  const goToNextKanji = useCallback(() => {
+    if (currentIndex < sortedKanjiData.length - 1) {
+      setSelectedKanji(sortedKanjiData[currentIndex + 1]);
+    }
+  }, [currentIndex, sortedKanjiData]);
+
+  const goToPrevKanji = useCallback(() => {
+    if (currentIndex > 0) {
+      setSelectedKanji(sortedKanjiData[currentIndex - 1]);
+    }
+  }, [currentIndex, sortedKanjiData]);
+
+  useEffect(() => {
+    if (!selectedKanji) return;
+
+    const handleKey = (e) => {
+      if (e.key === 'ArrowRight') {
+        goToNextKanji();
+      }
+
+      if (e.key === 'ArrowLeft') {
+        goToPrevKanji();
+      }
+
+      if (e.key === 'Escape') {
+        setSelectedKanji(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [selectedKanji, goToNextKanji, goToPrevKanji]);
+
   return (
     <Card className="max-w-4xl space-y-6">
       <h1 className="text-4xl font-bold text-center mb-6">Kanji Dictionary</h1>
@@ -326,9 +365,26 @@ const KanjiDictionary = () => {
             e.target === e.currentTarget && setSelectedKanji(null)
           }
         >
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+          {currentIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrevKanji();
+              }}
+              className="absolute left-6 text-4xl text-zinc-400 hover:text-white"
+            >
+              ←
+            </button>
+          )}
+          <div className="bg-zinc-900 border border-white/10 rounded-2xl px-8 py-4 w-full max-w-lg max-h-[80vh] overflow-y-auto">
             {/* HEADER */}
             <div className="text-center mb-2">
+              <div className="mb-4">
+                <span className="text-s text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
+                  {currentIndex + 1} / {sortedKanjiData.length}
+                </span>
+              </div>
+
               {/* <h2 className="text-6xl font-bold">{selectedKanji.literal}</h2> */}
 
               {/* Use KanjiVG rendering rather than plaintext */}
@@ -435,6 +491,17 @@ const KanjiDictionary = () => {
               </button>
             </div>
           </div>
+          {currentIndex < sortedKanjiData.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNextKanji();
+              }}
+              className="absolute right-6 text-4xl text-zinc-400 hover:text-white"
+            >
+              →
+            </button>
+          )}
         </div>
       )}
     </Card>

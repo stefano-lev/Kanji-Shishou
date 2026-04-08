@@ -15,12 +15,25 @@ const KanjiStrokeViewer = ({ kanji }) => {
   const [speed, setSpeed] = useState(() => {
     return Number(localStorage.getItem('kanji-speed')) || 1;
   });
+  const [autoPlay, setAutoPlay] = useState(() => {
+    return localStorage.getItem('kanji-autoplay') === 'true';
+  });
+
+  const literal = kanji?.literal;
 
   useEffect(() => {
     localStorage.setItem('kanji-speed', speed);
   }, [speed]);
 
-  const literal = kanji?.literal;
+  useEffect(() => {
+    localStorage.setItem('kanji-autoplay', autoPlay);
+  }, [autoPlay]);
+
+  useEffect(() => {
+    if (autoPlay) {
+      setAnimationTrigger((v) => v + 1);
+    }
+  }, [autoPlay, literal]);
 
   useEffect(() => {
     localStorage.setItem('kanji-hide-numbers', hideNumbers);
@@ -40,79 +53,71 @@ const KanjiStrokeViewer = ({ kanji }) => {
   useEffect(() => {
     if (!literal) return;
 
-    const url = getKanjiVGFilename(literal);
+    async function loadSVG() {
+      const url = getKanjiVGFilename(literal);
+      const cacheKey = `${url}-${hideNumbers}`;
 
-    const cacheKey = `${url}-${hideNumbers}-${animationTrigger}-${speed}`;
+      let baseSVG;
 
-    if (cache.has(cacheKey)) {
-      setSvgContent(cache.get(cacheKey));
-      return;
-    }
+      if (cache.has(cacheKey)) {
+        baseSVG = cache.get(cacheKey);
+      } else {
+        const res = await fetch(url);
+        const text = await res.text();
 
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error('SVG not found');
-        return res.text();
-      })
-      .then((data) => {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(data, 'image/svg+xml');
+        const doc = parser.parseFromString(text, 'image/svg+xml');
 
-        // remove trailing junk from rendering
-        Array.from(doc.childNodes).forEach((node) => {
-          if (node.nodeType === Node.PROCESSING_INSTRUCTION_NODE) {
-            node.remove();
-          }
-          if (node.nodeType === Node.COMMENT_NODE) {
-            node.remove();
-          }
-        });
-
-        // remove stroke numbers if enabled
+        // remove stroke numbers
         if (hideNumbers) {
-          const texts = doc.querySelectorAll('text');
-          texts.forEach((t) => t.remove());
-        }
-
-        const shouldAnimate = animationTrigger > 0;
-
-        if (shouldAnimate) {
-          const strokes = doc.querySelectorAll('path');
-          const baseStrokeDuration = 0.35 / speed;
-
-          strokes.forEach((stroke, i) => {
-            stroke.style.strokeDasharray = '1000';
-            stroke.style.strokeDashoffset = '1000';
-
-            stroke.style.animation = `draw ${baseStrokeDuration}s ease forwards ${i * baseStrokeDuration}s`;
-          });
-
-          const style = doc.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'style'
-          );
-          style.textContent = `
-          @keyframes draw {
-            to {
-              stroke-dashoffset: 0;
-            }
-          }
-        `;
-
-          doc.documentElement.appendChild(style);
+          doc.querySelectorAll('text').forEach((t) => t.remove());
         }
 
         const serializer = new XMLSerializer();
-        const cleaned = serializer.serializeToString(doc);
+        baseSVG = serializer.serializeToString(doc);
 
-        cache.set(cacheKey, cleaned);
-        setSvgContent(cleaned);
-        setError(false);
-      })
-      .catch(() => {
-        setError(true);
-        setSvgContent(null);
-      });
+        cache.set(cacheKey, baseSVG);
+      }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(baseSVG, 'image/svg+xml');
+
+      if (animationTrigger > 0) {
+        const strokes = doc.querySelectorAll('path');
+        const baseStrokeDuration = 0.35 / speed;
+
+        strokes.forEach((stroke, i) => {
+          stroke.style.strokeDasharray = '1000';
+          stroke.style.strokeDashoffset = '1000';
+
+          stroke.style.animation = `draw ${baseStrokeDuration}s ease forwards ${i * baseStrokeDuration}s`;
+        });
+
+        const style = doc.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'style'
+        );
+
+        style.textContent = `
+        @keyframes draw {
+          to { stroke-dashoffset: 0; }
+        }
+      `;
+
+        doc.documentElement.appendChild(style);
+      }
+
+      const serializer = new XMLSerializer();
+      const finalSVG = serializer.serializeToString(doc);
+
+      setSvgContent(finalSVG);
+      setError(false);
+    }
+
+    loadSVG().catch(() => {
+      setError(true);
+      setSvgContent(null);
+    });
   }, [literal, hideNumbers, animationTrigger, speed]);
 
   if (!literal) return null;
@@ -123,20 +128,28 @@ const KanjiStrokeViewer = ({ kanji }) => {
 
   return (
     <>
-      <div className="flex justify-center gap-2 mb-2">
+      <div className="flex justify-center gap-1 mb-2">
         <button
           onClick={() => setHideNumbers((v) => !v)}
-          className="text-xs px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
+          className="text-xs px-1 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
         >
           {hideNumbers ? 'Show Stroke Numbers' : 'Hide Stroke Numbers'}
         </button>
 
         <button
           onClick={() => setAnimationTrigger((v) => v + 1)}
-          className="text-xs px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50"
+          className="text-xs px-1 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50"
         >
           ▶ Play
         </button>
+
+        <button
+          onClick={() => setAutoPlay((v) => !v)}
+          className="text-xs px-1 py-2 rounded bg-zinc-800 hover:bg-zinc-700"
+        >
+          {autoPlay ? 'Autoplay On' : 'Autoplay Off'}
+        </button>
+
         <div className="flex items-center gap-2 text-xs text-zinc-400">
           <span>Speed</span>
           <input
@@ -149,8 +162,15 @@ const KanjiStrokeViewer = ({ kanji }) => {
           />
         </div>
       </div>
-      <div className="w-48 h-48 mx-auto flex items-center justify-center">
+      <div className="w-64 h-64 mx-auto flex items-center justify-center relative">
+        {!svgContent && (
+          <div className="absolute text-6xl text-zinc-700 font-bold">
+            {literal}
+          </div>
+        )}
+
         <div
+          key={animationTrigger}
           className="w-full h-full [&>svg]:w-full [&>svg]:h-full transition-opacity duration-200"
           style={{ opacity: svgContent ? 1 : 0 }}
           dangerouslySetInnerHTML={{ __html: svgContent }}

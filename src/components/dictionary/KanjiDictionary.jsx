@@ -5,6 +5,7 @@ import { kanjiByLevel, allKanji } from '@data/kanjiData';
 
 import * as storageHandler from '@utils/localStorageHandler';
 import { recordResult, getAllStats } from '@utils/statsHandler';
+import { getKanjiVGFilename } from '@utils/kanjiVGUtils';
 
 import Card from '@components/ui/Card';
 
@@ -48,9 +49,9 @@ function extractRadical(kanji) {
 
 function InfoRow({ label, children }) {
   return (
-    <div>
-      <p className="text-zinc-400">{label}</p>
-      <p className="font-medium">{children}</p>
+    <div className="flex justify-between border-b border-white/5 pb-1">
+      <span className="text-zinc-400">{label}</span>
+      <span className="font-medium">{children}</span>
     </div>
   );
 }
@@ -252,6 +253,13 @@ const KanjiDictionary = () => {
   const handleSelectKanji = useCallback((kanji) => {
     setSelectedKanji(kanji);
     recordResult(kanji.uid);
+
+    // pre-cache next kanji
+    const next = sortedKanjiData[currentIndex + 1];
+    if (next) {
+      fetch(getKanjiVGFilename(next.literal));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentIndex = useMemo(() => {
@@ -276,10 +284,12 @@ const KanjiDictionary = () => {
 
     const handleKey = (e) => {
       if (e.key === 'ArrowRight') {
+        e.preventDefault();
         goToNextKanji();
       }
 
       if (e.key === 'ArrowLeft') {
+        e.preventDefault();
         goToPrevKanji();
       }
 
@@ -360,7 +370,7 @@ const KanjiDictionary = () => {
 
       {selectedKanji && (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4"
           onClick={(e) =>
             e.target === e.currentTarget && setSelectedKanji(null)
           }
@@ -376,116 +386,147 @@ const KanjiDictionary = () => {
               ←
             </button>
           )}
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl px-8 py-4 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-            {/* HEADER */}
-            <div className="text-center mb-2">
-              <div className="mb-4">
-                <span className="text-s text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
-                  {currentIndex + 1} / {sortedKanjiData.length}
-                </span>
-              </div>
-
-              {/* <h2 className="text-6xl font-bold">{selectedKanji.literal}</h2> */}
-
-              {/* Use KanjiVG rendering rather than plaintext */}
-              <KanjiStrokeViewer kanji={selectedKanji} />
-
-              <p className="mt-4 text-zinc-300 text-lg">
-                {selectedKanji.reading_meaning.rmgroup.meaning?.join(', ')}
-              </p>
-            </div>
-
-            {/* CORE INFO GRID */}
-            <div className="grid grid-cols-3 gap-2 text-sm border-t border-white/10 pt-2">
-              <InfoRow label="Strokes">
-                {normalizeStrokeCount(selectedKanji.misc.stroke_count)}
-              </InfoRow>
-
-              <InfoRow label="JLPT">N{selectedKanji.misc.jlpt ?? '-'}</InfoRow>
-
-              <InfoRow label="Frequency">
-                {selectedKanji.misc.freq ?? '-'}
-              </InfoRow>
-
-              <InfoRow label="Grade">{selectedKanji.misc.grade ?? '-'}</InfoRow>
-
-              <InfoRow label="Radical">{extractRadical(selectedKanji)}</InfoRow>
-            </div>
-
-            {/* READINGS */}
-            <div className="mt-2 border-t border-white/10 pt-2">
-              <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
-                Readings
-              </h3>
-
-              {(() => {
-                const { on, kun } = extractReadings(selectedKanji);
-
-                return (
-                  <div className="space-y-1 text-sm">
-                    {on.length > 0 && (
-                      <p>
-                        <span className="text-zinc-400">On:</span>{' '}
-                        {on.join(', ')}
-                      </p>
-                    )}
-                    {kun.length > 0 && (
-                      <p>
-                        <span className="text-zinc-400">Kun:</span>{' '}
-                        {kun.join(', ')}
-                      </p>
-                    )}
+          <div
+            className="bg-zinc-900 border border-white/10 rounded-2xl 
+                w-[90vw] max-w-4xl max-h-[85vh] 
+                flex flex-col overflow-hidden"
+          >
+            {/* SCROLLABLE CONTENT */}
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* LEFT PANEL */}
+                <div className="text-center">
+                  <div className="mb-4">
+                    <span className="text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
+                      {currentIndex + 1} / {sortedKanjiData.length}
+                    </span>
                   </div>
-                );
-              })()}
+
+                  <KanjiStrokeViewer kanji={selectedKanji} />
+
+                  <div className="mt-4 h-24 flex items-center justify-center">
+                    <p
+                      className={`text-zinc-300 leading-snug ${
+                        selectedKanji.reading_meaning.rmgroup.meaning.join(', ')
+                          .length > 60
+                          ? 'text-base'
+                          : 'text-lg'
+                      }`}
+                    >
+                      {selectedKanji.reading_meaning.rmgroup.meaning.join(', ')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* RIGHT PANEL */}
+                <div className="space-y-4">
+                  {/* INFO */}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                    <InfoRow label="Strokes">
+                      {normalizeStrokeCount(selectedKanji.misc.stroke_count)}
+                    </InfoRow>
+
+                    <InfoRow label="JLPT">
+                      N{selectedKanji.misc.jlpt ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Frequency">
+                      {selectedKanji.misc.freq ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Grade">
+                      {selectedKanji.misc.grade ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Radical">
+                      {extractRadical(selectedKanji)}
+                    </InfoRow>
+                  </div>
+
+                  {/* READINGS */}
+                  <div className="border-t border-white/10 pt-3">
+                    <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
+                      Readings
+                    </h3>
+
+                    {(() => {
+                      const { on, kun } = extractReadings(selectedKanji);
+
+                      return (
+                        <div className="space-y-1 text-sm">
+                          {on.length > 0 && (
+                            <p>
+                              <span className="text-zinc-400">On:</span>{' '}
+                              {on.join(', ')}
+                            </p>
+                          )}
+                          {kun.length > 0 && (
+                            <p>
+                              <span className="text-zinc-400">Kun:</span>{' '}
+                              {kun.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* NANORI */}
+                  {normalizeToArray(selectedKanji.reading_meaning?.nanori)
+                    .length > 0 && (
+                    <div className="border-t border-white/10 pt-3">
+                      <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
+                        Name Readings
+                      </h3>
+
+                      <p className="text-sm">
+                        {normalizeToArray(
+                          selectedKanji.reading_meaning?.nanori
+                        ).join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* DICTIONARY REFERENCES */}
+                  {selectedKanji.dic_number?.dic_ref && (
+                    <div className="border-t border-white/10 pt-3 h-40">
+                      <details className="h-full flex flex-col">
+                        <summary className="cursor-pointer text-zinc-400 hover:text-white">
+                          Dictionary References
+                        </summary>
+
+                        <div className="mt-2 overflow-y-auto text-xs space-y-1 flex-1">
+                          {(Array.isArray(selectedKanji.dic_number.dic_ref)
+                            ? selectedKanji.dic_number.dic_ref
+                            : [selectedKanji.dic_number.dic_ref]
+                          ).map((ref, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span className="text-zinc-500">
+                                {ref['@dr_type']}
+                              </span>
+                              <span>{ref['#text']}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* NANORI */}
-            {normalizeToArray(selectedKanji.reading_meaning?.nanori).length >
-              0 && (
-              <div className="mt-2 border-t border-white/10 pt-4">
-                <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
-                  Name Readings (Nanori)
-                </h3>
-                <p className="text-sm">
-                  {normalizeToArray(selectedKanji.reading_meaning?.nanori).join(
-                    ', '
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* DICTIONARY REFERENCES */}
-            {selectedKanji.dic_number?.dic_ref && (
-              <details className="mt-2 border-t border-white/10 pt-4 text-sm">
-                <summary className="cursor-pointer text-zinc-400 hover:text-white">
-                  Dictionary References
-                </summary>
-                <div className="mt-2 space-y-1">
-                  {(Array.isArray(selectedKanji.dic_number.dic_ref)
-                    ? selectedKanji.dic_number.dic_ref
-                    : [selectedKanji.dic_number.dic_ref]
-                  ).map((ref, i) => (
-                    <p key={i}>
-                      {ref['@dr_type']}: {ref['#text']}
-                    </p>
-                  ))}
-                </div>
-              </details>
-            )}
-
-            {/* BUTTONS */}
-            <div className="flex justify-center gap-6 mt-6">
+            {/* FOOTER BUTTONS */}
+            <div className="border-t border-white/10 p-4 flex justify-center gap-6">
               <button
                 onClick={() => toggleFavorite(selectedKanji)}
                 className="text-2xl"
               >
-                {favorites.includes(selectedKanji.uid) ? '❤️' : '❤︎⁠'}
+                {favorites.includes(selectedKanji.uid) ? '❤️' : '❤︎'}
               </button>
 
               <button
                 onClick={() => setSelectedKanji(null)}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition"
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500"
               >
                 Close
               </button>

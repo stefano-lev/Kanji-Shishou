@@ -1,0 +1,67 @@
+import type { DailyStat, DailyStats, DailyStudyEntry } from '@/types';
+
+const STORAGE_KEY = 'kanji_daily_stats';
+
+function getTodayISO(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+export function getDailyStats(): DailyStats {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw) as DailyStats;
+  } catch {
+    return {};
+  }
+}
+
+function saveDailyStats(stats: DailyStats) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+}
+
+export function recordDailyStudy({
+  uid,
+  correct = null,
+  durationSeconds,
+}: DailyStudyEntry) {
+  const stats = getDailyStats();
+  const today = getTodayISO();
+
+  if (!stats[today]) {
+    stats[today] = {
+      uniqueKanji: [],
+      totalSeen: 0,
+      correct: 0,
+      incorrect: 0,
+      studyTimeSeconds: 0,
+    };
+  }
+
+  const day = stats[today] as DailyStat;
+
+  if (!day.uniqueKanji.includes(uid)) {
+    day.uniqueKanji.push(uid);
+  }
+
+  day.totalSeen += 1;
+  day.studyTimeSeconds += durationSeconds;
+
+  if (correct) {
+    day.correct += 1;
+  } else {
+    day.incorrect += 1;
+  }
+
+  saveDailyStats(stats);
+}
+
+export function getTotalStudyTimeSeconds() {
+  const stats = getDailyStats();
+
+  return Object.values(stats).reduce(
+    (sum, day) => sum + (day.studyTimeSeconds || 0),
+    0
+  );
+}

@@ -1,0 +1,582 @@
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import type { ReactNode } from 'react';
+
+import { kanjiByLevel, allKanji } from '@data/kanjiData';
+
+import * as storageHandler from '@utils/localStorageHandler';
+import { recordResult, getAllStats } from '@utils/statsHandler';
+import { getKanjiVGFilename } from '@utils/kanjiVGUtils';
+
+import Card from '@components/ui/Card';
+
+import KanjiStrokeViewer from '../kanji/KanjiStrokeViewer';
+
+import type { JLPTLevel, Kanji, KanjiReading } from '@/types';
+
+type DictionaryLevel = JLPTLevel | '0';
+type SortDirection = 'asc' | 'desc';
+type SortKey = 'none' | 'accuracy' | 'seen' | 'stroke' | 'freq' | 'jlpt' | 'lastSeen';
+
+function normalizeStrokeCount(stroke: Kanji['misc']['stroke_count']): number {
+  if (Array.isArray(stroke)) {
+    return Number(stroke[0]);
+  }
+  return Number(stroke);
+}
+
+function normalizeToArray(value?: string | string[]): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function extractReadings(kanji: Kanji) {
+  const readings = kanji.reading_meaning?.rmgroup?.reading ?? [];
+
+  const on: string[] = [];
+  const kun: string[] = [];
+  const other: KanjiReading[] = [];
+
+  readings.forEach((r) => {
+    if (r['@r_type'] === 'ja_on') on.push(r['#text']);
+    else if (r['@r_type'] === 'ja_kun') kun.push(r['#text']);
+    else other.push(r);
+  });
+
+  return { on, kun, other };
+}
+
+function extractRadical(kanji: Kanji): string | null {
+  const rad = kanji.radical?.rad_value;
+
+  if (Array.isArray(rad)) return rad[0]['#text'];
+  if (rad?.['#text']) return rad['#text'];
+  return null;
+}
+
+interface InfoRowProps {
+  label: string;
+  children: ReactNode;
+}
+
+function InfoRow({ label, children }: InfoRowProps) {
+  return (
+    <div className="flex justify-between border-b border-white/5 pb-1">
+      <span className="text-zinc-400">{label}</span>
+      <span className="font-medium">{children}</span>
+    </div>
+  );
+}
+
+interface KanjiGridProps {
+  kanjiData: Kanji[];
+  sortKey: SortKey;
+  onSelect: (kanji: Kanji) => void;
+}
+
+const KanjiGrid = React.memo(function KanjiGrid({
+  kanjiData,
+  sortKey,
+  onSelect,
+}: KanjiGridProps) {
+  console.log('Grid rendered');
+
+  function getInfoboxValue(
+    kanji: Kanji,
+    sortKey: SortKey
+  ): ReactNode | null {
+    switch (sortKey) {
+      case 'accuracy':
+        return kanji._accuracy != null
+          ? `${Math.round(kanji._accuracy * 100)}%`
+          : null;
+
+      case 'seen':
+        return kanji._stat?.seen ?? 0;
+
+      case 'stroke':
+        return normalizeStrokeCount(kanji.misc?.stroke_count);
+
+      case 'freq':
+        return kanji.misc?.freq ?? null;
+
+      case 'jlpt':
+        return kanji.misc?.jlpt ?? null;
+
+      case 'lastSeen':
+        return kanji._stat?.lastSeen
+          ? new Date(kanji._stat.lastSeen).toLocaleDateString()
+          : null;
+
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-4 max-w-5xl mx-auto px-2">
+      {kanjiData.map((kanji) => {
+        const infobox = getInfoboxValue(kanji, sortKey);
+
+        return (
+          <button
+            key={kanji.uid}
+            onClick={() => onSelect(kanji)}
+            className="relative aspect-square rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center"
+          >
+            {/* Main Kanji */}
+            <span className="text-2xl md:text-3xl font-bold">
+              {kanji.literal}
+            </span>
+
+            {/* Top Right Badge */}
+            {infobox != null && (
+              <div className="absolute inset-0 flex items-start justify-end p-2 pointer-events-none">
+                <span className="text-[10px] sm:text-xs bg-white/10 px-2 py-0.5 rounded-md text-zinc-300">
+                  {infobox}
+                </span>
+              </div>
+            )}
+
+            {/* Bottom Right UID */}
+            <div className="absolute inset-0 flex items-end justify-end p-2 pointer-events-none">
+              <span className="text-[10px] sm:text-xs text-zinc-500">
+                N{kanji.uid}
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
+const KanjiDictionary = () => {
+  const [selectedLevel, setSelectedLevel] = useState<DictionaryLevel>('5');
+  const [selectedKanji, setSelectedKanji] = useState<Kanji | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [filterFavorites, setFilterFavorites] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('none');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const getKanjiByLevel = (level: DictionaryLevel): Kanji[] => {
+    if (level === '0') return allKanji;
+    return kanjiByLevel[level] || [];
+  };
+
+  const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
+
+  const allStats = useMemo(() => getAllStats(), []);
+
+  const kanjiData = useMemo(() => {
+    let data = getKanjiByLevel(selectedLevel);
+
+    if (filterFavorites) {
+      data = data.filter((k) => favoriteSet.has(k.uid));
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+
+      data = data.filter((k) => {
+        const literalMatch = k.literal.includes(query);
+
+        const meanings = k.reading_meaning?.rmgroup?.meaning ?? [];
+        const meaningMatch = meanings.some((m) =>
+          m.toLowerCase().includes(query)
+        );
+
+        const readings = k.reading_meaning?.rmgroup?.reading ?? [];
+        const readingMatch = readings.some((r) =>
+          r['#text'].toLowerCase().includes(query)
+        );
+
+        return literalMatch || meaningMatch || readingMatch;
+      });
+    }
+
+    return data;
+  }, [selectedLevel, filterFavorites, favoriteSet, searchQuery]);
+
+  const sortedKanjiData = useMemo(() => {
+    if (sortKey === 'none') return kanjiData;
+
+    const withStats = kanjiData.map((k) => {
+      const stat = allStats[k.uid] ?? {
+        seen: 0,
+        correct: 0,
+        incorrect: 0,
+        lastSeen: null,
+      };
+
+      const accuracy = stat.seen > 0 ? stat.correct / stat.seen : 0;
+
+      return {
+        ...k,
+        _stat: stat,
+        _accuracy: accuracy,
+      };
+    });
+
+    withStats.sort((a, b) => {
+      let valA: number | Date;
+      let valB: number | Date;
+
+      switch (sortKey) {
+        case 'accuracy':
+          valA = a._accuracy;
+          valB = b._accuracy;
+          break;
+        case 'seen':
+          valA = a._stat.seen;
+          valB = b._stat.seen;
+          break;
+        case 'stroke':
+          valA = normalizeStrokeCount(a.misc.stroke_count);
+          valB = normalizeStrokeCount(b.misc.stroke_count);
+          break;
+        case 'freq':
+          valA = Number(a.misc.freq ?? 9999);
+          valB = Number(b.misc.freq ?? 9999);
+          break;
+        case 'jlpt':
+          valA = Number(a.misc.jlpt ?? 0);
+          valB = Number(b.misc.jlpt ?? 0);
+          break;
+        case 'lastSeen':
+          valA = new Date(a._stat.lastSeen ?? 0);
+          valB = new Date(b._stat.lastSeen ?? 0);
+          break;
+        default:
+          return 0;
+      }
+
+      const compareA = valA instanceof Date ? valA.getTime() : valA;
+      const compareB = valB instanceof Date ? valB.getTime() : valB;
+
+      if (sortDirection === 'asc') return compareA > compareB ? 1 : -1;
+      return compareA < compareB ? 1 : -1;
+    });
+
+    return withStats;
+  }, [kanjiData, sortKey, sortDirection, allStats]);
+
+  useEffect(() => {
+    setFavorites(storageHandler.getFavorites() || []);
+  }, []);
+
+  const toggleFavorite = (kanji: Kanji) => {
+    const updated = favorites.includes(kanji.uid)
+      ? favorites.filter((uid) => uid !== kanji.uid)
+      : [...favorites, kanji.uid];
+
+    setFavorites(updated);
+    storageHandler.saveFavorites(updated);
+  };
+
+  const currentIndex = useMemo(() => {
+    if (!selectedKanji) return -1;
+    return sortedKanjiData.findIndex((k) => k.uid === selectedKanji.uid);
+  }, [selectedKanji, sortedKanjiData]);
+
+  const handleSelectKanji = useCallback(
+    (kanji: Kanji) => {
+      setSelectedKanji(kanji);
+      recordResult(kanji.uid);
+
+      const selectedIndex = sortedKanjiData.findIndex(
+        (candidate) => candidate.uid === kanji.uid
+      );
+      const next = sortedKanjiData[selectedIndex + 1];
+      const nextUrl = next ? getKanjiVGFilename(next.literal) : null;
+
+      if (nextUrl) {
+        fetch(nextUrl);
+      }
+    },
+    [sortedKanjiData]
+  );
+
+  const goToNextKanji = useCallback(() => {
+    if (currentIndex < sortedKanjiData.length - 1) {
+      setSelectedKanji(sortedKanjiData[currentIndex + 1]);
+    }
+  }, [currentIndex, sortedKanjiData]);
+
+  const goToPrevKanji = useCallback(() => {
+    if (currentIndex > 0) {
+      setSelectedKanji(sortedKanjiData[currentIndex - 1]);
+    }
+  }, [currentIndex, sortedKanjiData]);
+
+  useEffect(() => {
+    if (!selectedKanji) return;
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextKanji();
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevKanji();
+      }
+
+      if (e.key === 'Escape') {
+        setSelectedKanji(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [selectedKanji, goToNextKanji, goToPrevKanji]);
+
+  return (
+    <Card className="max-w-4xl space-y-6">
+      <h1 className="text-4xl font-bold text-center mb-6">Kanji Dictionary</h1>
+
+      <div className="flex flex-wrap gap-2 justify-center mb-6">
+        <select
+          value={selectedLevel}
+          onChange={(e) => setSelectedLevel(e.target.value as DictionaryLevel)}
+          className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2"
+        >
+          <option value="0">All Levels</option>
+          <option value="5">JLPT N5</option>
+          <option value="4">JLPT N4</option>
+          <option value="3">JLPT N3</option>
+          <option value="2">JLPT N2</option>
+          <option value="1">JLPT N1</option>
+        </select>
+
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value as SortKey)}
+          className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2"
+        >
+          <option value="none">Sort: Default</option>
+          <option value="accuracy">Accuracy</option>
+          <option value="seen">Times Seen</option>
+          <option value="stroke">Stroke Count</option>
+          <option value="freq">Frequency</option>
+          <option value="jlpt">JLPT</option>
+          <option value="lastSeen">Last Seen</option>
+        </select>
+
+        <button
+          onClick={() =>
+            setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+          }
+          className="px-2 py-1 rounded-lg bg-zinc-900"
+        >
+          {sortDirection === 'asc' ? '↑' : '↓'}
+        </button>
+
+        <input
+          type="text"
+          placeholder="Search kanji, meaning, or reading..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-zinc-900 border border-white/10 rounded-lg px-4 py-2 w-72"
+        />
+
+        <button
+          onClick={() => setFilterFavorites((f) => !f)}
+          className={`text-2xl transition ${
+            filterFavorites ? 'text-red-400' : 'text-zinc-400'
+          }`}
+        >
+          ❤︎⁠
+        </button>
+      </div>
+
+      <KanjiGrid
+        kanjiData={sortedKanjiData}
+        sortKey={sortKey}
+        onSelect={handleSelectKanji}
+      />
+
+      {selectedKanji && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4"
+          onClick={(e) =>
+            e.target === e.currentTarget && setSelectedKanji(null)
+          }
+        >
+          {currentIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrevKanji();
+              }}
+              className="absolute left-6 text-4xl text-zinc-400 hover:text-white"
+            >
+              ←
+            </button>
+          )}
+          <div
+            className="bg-zinc-900 border border-white/10 rounded-2xl 
+                w-[90vw] max-w-4xl max-h-[85vh] 
+                flex flex-col overflow-hidden"
+          >
+            {/* SCROLLABLE CONTENT */}
+            <div className="flex-1 overflow-y-auto p-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* LEFT PANEL */}
+                <div className="text-center">
+                  <div className="mb-4">
+                    <span className="text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
+                      {currentIndex + 1} / {sortedKanjiData.length}
+                    </span>
+                  </div>
+
+                  <KanjiStrokeViewer kanji={selectedKanji} />
+
+                  <div className="mt-4 h-24 flex items-center justify-center">
+                    <p
+                      className={`text-zinc-300 leading-snug ${
+                        selectedKanji.reading_meaning.rmgroup.meaning.join(', ')
+                          .length > 60
+                          ? 'text-base'
+                          : 'text-lg'
+                      }`}
+                    >
+                      {selectedKanji.reading_meaning.rmgroup.meaning.join(', ')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* RIGHT PANEL */}
+                <div className="space-y-4">
+                  {/* INFO */}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+                    <InfoRow label="Strokes">
+                      {normalizeStrokeCount(selectedKanji.misc.stroke_count)}
+                    </InfoRow>
+
+                    <InfoRow label="JLPT">
+                      N{selectedKanji.misc.jlpt ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Frequency">
+                      {selectedKanji.misc.freq ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Grade">
+                      {selectedKanji.misc.grade ?? '-'}
+                    </InfoRow>
+
+                    <InfoRow label="Radical">
+                      {extractRadical(selectedKanji)}
+                    </InfoRow>
+                  </div>
+
+                  {/* READINGS */}
+                  <div className="border-t border-white/10 pt-3">
+                    <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
+                      Readings
+                    </h3>
+
+                    {(() => {
+                      const { on, kun } = extractReadings(selectedKanji);
+
+                      return (
+                        <div className="space-y-1 text-sm">
+                          {on.length > 0 && (
+                            <p>
+                              <span className="text-zinc-400">On:</span>{' '}
+                              {on.join(', ')}
+                            </p>
+                          )}
+                          {kun.length > 0 && (
+                            <p>
+                              <span className="text-zinc-400">Kun:</span>{' '}
+                              {kun.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* NANORI */}
+                  {normalizeToArray(selectedKanji.reading_meaning?.nanori)
+                    .length > 0 && (
+                    <div className="border-t border-white/10 pt-3">
+                      <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-2">
+                        Name Readings
+                      </h3>
+
+                      <p className="text-sm">
+                        {normalizeToArray(
+                          selectedKanji.reading_meaning?.nanori
+                        ).join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* DICTIONARY REFERENCES */}
+                  {selectedKanji.dic_number?.dic_ref && (
+                    <div className="border-t border-white/10 pt-3 h-40">
+                      <details className="h-full flex flex-col">
+                        <summary className="cursor-pointer text-zinc-400 hover:text-white">
+                          Dictionary References
+                        </summary>
+
+                        <div className="mt-2 overflow-y-auto text-xs space-y-1 flex-1">
+                          {(Array.isArray(selectedKanji.dic_number.dic_ref)
+                            ? selectedKanji.dic_number.dic_ref
+                            : [selectedKanji.dic_number.dic_ref]
+                          ).map((ref, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span className="text-zinc-500">
+                                {ref['@dr_type']}
+                              </span>
+                              <span>{ref['#text']}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* FOOTER BUTTONS */}
+            <div className="border-t border-white/10 p-4 flex justify-center gap-6">
+              <button
+                onClick={() => toggleFavorite(selectedKanji)}
+                className="text-2xl"
+              >
+                {favorites.includes(selectedKanji.uid) ? '❤️' : '❤︎'}
+              </button>
+
+              <button
+                onClick={() => setSelectedKanji(null)}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+          {currentIndex < sortedKanjiData.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNextKanji();
+              }}
+              className="absolute right-6 text-4xl text-zinc-400 hover:text-white"
+            >
+              →
+            </button>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+};
+
+export default KanjiDictionary;

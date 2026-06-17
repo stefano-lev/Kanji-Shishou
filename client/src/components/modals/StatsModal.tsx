@@ -5,16 +5,17 @@ import { kanjiByUid } from '@data/kanjiLookup';
 
 import { getTotalStudyTimeSeconds } from '@utils/dailyStatsHandler';
 import {
-  loadStats,
-  exportAllData,
-  importAllData,
-} from '@utils/localStorageHandler';
+  createAppBackupPayload,
+  restoreAppBackupPayload,
+} from '@utils/backupPayload';
+import { loadStats } from '@utils/localStorageHandler';
 import { formatStudyTime } from '@utils/timeFormatter';
 import { loadSRS } from '@utils/srsHandler';
 import { loadStatsPreferences } from '@utils/statsPreferences';
 
 import StatsPreferencesModal from '@components/modals/StatsPreferencesModal';
 import SnapshotModal from '@components/modals/SnapshotModal';
+import CloudBackupModal from '@components/modals/CloudBackupModal';
 
 import type { JLPTLevel, KanjiStat, SRSStat } from '@/types';
 
@@ -39,19 +40,20 @@ const StatsModal = ({
   const [prefs, setPrefs] = useState(loadStatsPreferences());
   const [showPrefsModal, setShowPrefsModal] = useState(false);
   const [showSnapshots, setShowSnapshots] = useState(false);
+  const [showCloudBackup, setShowCloudBackup] = useState(false);
   const entries = Object.entries(stats);
 
   const handleExport = () => {
-    const data = exportAllData();
+    const payload = createAppBackupPayload();
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json',
     });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `kanji-backup-${new Date().toISOString()}.json`;
+    a.download = `kanji-shishou-backup-${new Date().toISOString()}.json`;
     a.click();
 
     URL.revokeObjectURL(url);
@@ -66,12 +68,14 @@ const StatsModal = ({
     reader.onload = (event) => {
       try {
         const result = event.target?.result;
+
         if (typeof result !== 'string') {
           throw new Error('Backup file could not be read as text.');
         }
 
-        const data = JSON.parse(result);
-        importAllData(data);
+        const payload = JSON.parse(result);
+
+        restoreAppBackupPayload(payload);
 
         alert('Backup restored! Reloading...');
         window.location.reload();
@@ -85,9 +89,7 @@ const StatsModal = ({
 
   const getSource = (data: KanjiStat): KanjiStat | SRSStat => {
     if (statsMode === 'srs') {
-      return (
-        data.srs ?? { seen: 0, correct: 0, incorrect: 0, lastSeen: null }
-      );
+      return data.srs ?? { seen: 0, correct: 0, incorrect: 0, lastSeen: null };
     }
 
     return data;
@@ -180,6 +182,14 @@ const StatsModal = ({
           </h2>
 
           <div className="flex gap-3">
+            <button
+              onClick={() => setShowCloudBackup(true)}
+              title="Cloud Backup"
+              className="text-zinc-400 hover:text-blue-400 transition text-lg"
+            >
+              ☁️
+            </button>
+
             <button
               onClick={handleExport}
               title="Export Backup"
@@ -374,6 +384,10 @@ const StatsModal = ({
 
       {showSnapshots && (
         <SnapshotModal onClose={() => setShowSnapshots(false)} />
+      )}
+
+      {showCloudBackup && (
+        <CloudBackupModal onClose={() => setShowCloudBackup(false)} />
       )}
     </div>
   );

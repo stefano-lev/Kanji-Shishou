@@ -35,10 +35,6 @@ const SRSOnboarding = ({ onComplete }: SRSOnboardingProps) => {
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] p-8">
-      <div className="pointer-events-none absolute right-5 top-5 text-5xl font-black text-zinc-950">
-        復
-      </div>
-
       <div className="relative space-y-6">
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">

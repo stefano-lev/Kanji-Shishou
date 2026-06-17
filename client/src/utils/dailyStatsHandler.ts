@@ -48,9 +48,11 @@ export function recordDailyStudy({
   day.totalSeen += 1;
   day.studyTimeSeconds += durationSeconds;
 
-  if (correct) {
+  if (correct === true) {
     day.correct += 1;
-  } else {
+  }
+
+  if (correct === false) {
     day.incorrect += 1;
   }
 

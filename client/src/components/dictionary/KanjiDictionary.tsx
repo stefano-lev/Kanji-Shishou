@@ -388,7 +388,7 @@ const KanjiDictionary = () => {
 
         <input
           type="text"
-          placeholder="Search kanji, meaning, or reading..."
+          placeholder="Search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-2 text-zinc-200 outline-none transition focus:border-red-900"

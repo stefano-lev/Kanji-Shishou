@@ -53,6 +53,16 @@ export const saveFavorites = (favorites: string[]) => {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 };
 
+export const USER_DATA_KEYS = [
+  'kanjiStats',
+  'kanjiSRS',
+  'kanji_daily_stats',
+  'kanji_srs_daily_progress',
+  'favorites',
+  'flashcardSession',
+  'multichoiceSession',
+] as const;
+
 const ALL_KEYS = [
   'kanjiStats',
   'kanjiSRS',
@@ -81,6 +91,12 @@ export const importAllData = (data: BackupData) => {
     if (data[key]) {
       localStorage.setItem(key, JSON.stringify(data[key]));
     }
+  });
+};
+
+export const clearAllUserData = () => {
+  USER_DATA_KEYS.forEach((key) => {
+    localStorage.removeItem(key);
   });
 };
 

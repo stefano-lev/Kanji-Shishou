@@ -36,10 +36,6 @@ const StatsPreferencesModal = ({
       }
     >
       <div className="relative w-full max-w-md overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] p-6 text-zinc-100">
-        <div className="pointer-events-none absolute -right-4 -top-8 text-8xl font-black text-zinc-950">
-          統
-        </div>
-
         <div className="relative">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
             Statistics Display

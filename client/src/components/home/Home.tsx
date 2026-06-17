@@ -9,10 +9,17 @@ import { getAllStats } from '@utils/statsHandler';
 import { getDailyStats } from '@utils/dailyStatsHandler';
 import { loadHomePreferences } from '@utils/homePreferences';
 import { saveSnapshot } from '@utils/localStorageHandler';
+import {
+  hasMeaningfulUserData,
+  hasSeenDemoPrompt,
+  isDemoMode,
+} from '@utils/demoMode';
 
 import Card from '@components/ui/Card';
 
 import HomePreferencesModal from '@components/modals/HomePreferencesModal';
+import DemoOnboardingModal from '@components/modals/DemoOnboardingModal';
+import DemoModeBanner from '@components/home/DemoModeBanner';
 
 function calculateStreak(dates: string[]) {
   let streak = 0;
@@ -57,6 +64,12 @@ const Home = () => {
   const dayData = selectedDay ? dailyStats[selectedDay] : null;
   const todayISO = new Date().toISOString().split('T')[0];
 
+  const [showDemoPrompt, setShowDemoPrompt] = useState(() => {
+    return !hasSeenDemoPrompt() && !hasMeaningfulUserData();
+  });
+
+  const demoModeActive = isDemoMode();
+
   useEffect(() => {
     const last = localStorage.getItem('lastSnapshot');
     const now = Date.now();
@@ -74,19 +87,17 @@ const Home = () => {
       className="border-0 bg-transparent shadow-none"
     >
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
         className="space-y-6"
       >
-        <section className="relative overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] p-6 sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute bottom-[-2.5rem] right-8 select-none text-[11rem] font-black leading-none text-zinc-950/80 sm:text-[14rem]">
-            習
-          </div>
+        {demoModeActive && <DemoModeBanner />}
 
+        <section className="relative overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] p-6 sm:p-8 lg:p-10">
           <button
             onClick={() => setShowPrefsModal(true)}
-            className="absolute right-5 top-5 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-100"
+            className="absolute right-2 top-2 rounded-md border border-zinc-800 bg-zinc-950 px-1 py-1 text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-100"
             title="Home Preferences"
           >
             ⚙
@@ -212,6 +223,10 @@ const Home = () => {
             }}
           />
         )}
+
+        {showDemoPrompt && (
+          <DemoOnboardingModal onClose={() => setShowDemoPrompt(false)} />
+        )}
       </motion.div>
     </Card>
   );
@@ -275,7 +290,7 @@ const NavCard = ({ to, title, jp, description, badge }: NavCardProps) => (
     to={to}
     className="group relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-900/70 hover:bg-[#151512]"
   >
-    <div className="absolute right-4 top-3 text-4xl font-bold text-zinc-900 transition group-hover:text-red-950/50">
+    <div className="absolute right-4 top-3 text-2xl font-bold text-zinc-900 transition group-hover:text-red-950/50">
       {jp}
     </div>
 
@@ -395,11 +410,7 @@ const AllTimeStats = () => {
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-[#11110f] p-6">
-      <SectionHeader
-        eyebrow="Lifetime Record"
-        title="All-Time Statistics"
-        description="A compact snapshot of your accumulated study history."
-      />
+      <SectionHeader eyebrow="Lifetime Record" title="" description="" />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard

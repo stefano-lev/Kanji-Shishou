@@ -131,10 +131,6 @@ const CloudBackupModal = ({ onClose }: CloudBackupModalProps) => {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] text-zinc-100">
-        <div className="pointer-events-none absolute -right-5 -top-10 text-9xl font-black text-zinc-950">
-          雲
-        </div>
-
         <div className="relative border-b border-zinc-800 p-6">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
             Cloud Sync

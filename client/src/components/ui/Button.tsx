@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonVariant = 'primary' | 'danger' | 'success' | 'warning';
+type ButtonVariant = 'primary' | 'danger' | 'success' | 'warning' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -14,13 +14,19 @@ const Button = ({
   className = '',
   ...props
 }: ButtonProps) => {
-  const base = 'rounded-lg px-4 py-3 font-medium transition';
+  const base =
+    'rounded-md border px-4 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50';
 
   const variants: Record<ButtonVariant, string> = {
-    primary: 'bg-blue-600 hover:bg-blue-500',
-    danger: 'bg-red-600 hover:bg-red-500',
-    success: 'bg-emerald-600 hover:bg-emerald-500',
-    warning: 'bg-amber-600 hover:bg-amber-500',
+    primary:
+      'border-red-800 bg-red-900 text-red-50 hover:border-red-700 hover:bg-red-800',
+    danger: 'border-red-900/70 bg-zinc-950 text-red-200 hover:bg-red-950/50',
+    success:
+      'border-emerald-900 bg-emerald-950 text-emerald-200 hover:border-emerald-700',
+    warning:
+      'border-amber-900 bg-amber-950 text-amber-200 hover:border-amber-700',
+    ghost:
+      'border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
   };
 
   return (

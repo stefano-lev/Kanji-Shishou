@@ -359,7 +359,8 @@ const SRSReview = () => {
 
   return (
     <Card
-      className={`flex flex-col ${mode === MODES.REVIEW ? 'max-w-5xl' : ''}`}
+      size={mode === MODES.REVIEW ? 'lg' : 'md'}
+      className="flex flex-col gap-5"
     >
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold ">SRS Review</h1>
@@ -437,7 +438,7 @@ const SRSReview = () => {
                   <div
                     key={lvl.level}
                     onClick={() => setStatsLevelFilter(lvl.level)}
-                    className={`cursor-pointer bg-zinc-900/60 border border-white/10 rounded-xl p-5 hover:bg-zinc-800 transition ${
+                    className={`cursor-pointer rounded-lg border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-900/70 hover:bg-[#151512] ${
                       index === 4 ? 'col-span-2' : ''
                     }`}
                   >
@@ -476,8 +477,11 @@ const SRSReview = () => {
             ></ProgressBar>
           </div>
 
-          <div className="w-full max-w-md mx-auto bg-zinc-900/70 border border-white/10 rounded-2xl py-4 flex items-center justify-center shadow-inner animate-fade-in">
-            <span className="text-[4rem] sm:text-[5rem] md:text-[6rem] font-bold tracking-wide">
+          <div className="relative mx-auto flex w-full max-w-md items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 py-6 animate-fade-in">
+            <div className="pointer-events-none absolute right-4 top-2 text-7xl font-black text-zinc-900">
+              復
+            </div>
+            <span className="relative text-[4rem] font-bold tracking-wide text-zinc-100 sm:text-[5rem] md:text-[6rem]">
               {currentKanji.literal}
             </span>
           </div>
@@ -537,7 +541,7 @@ const SRSReview = () => {
         </div>
       )}
       {mode === MODES.FINISHED && (
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl shadow-2xl p-10 text-center space-y-4">
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-10 text-center space-y-4">
           <h2 className="text-2xl font-semibold">Session Complete</h2>
 
           <p className="text-zinc-400">

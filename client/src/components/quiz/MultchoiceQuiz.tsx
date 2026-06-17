@@ -59,16 +59,19 @@ const MultchoiceQuiz = () => {
   const roundTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [sessionTime, setSessionTime] = useState(0);
 
-  const generateChoices = useCallback((correctKanji: Kanji, allKanji: Kanji[]) => {
-    const randomChoices = allKanji
-      .filter((k) => k !== correctKanji)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 7);
+  const generateChoices = useCallback(
+    (correctKanji: Kanji, allKanji: Kanji[]) => {
+      const randomChoices = allKanji
+        .filter((k) => k !== correctKanji)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 7);
 
-    randomChoices.push(correctKanji);
-    randomChoices.sort(() => 0.5 - Math.random());
-    setChoices(randomChoices);
-  }, []);
+      randomChoices.push(correctKanji);
+      randomChoices.sort(() => 0.5 - Math.random());
+      setChoices(randomChoices);
+    },
+    []
+  );
 
   const startQuiz = useCallback(
     (data: Kanji[]) => {
@@ -354,7 +357,7 @@ const MultchoiceQuiz = () => {
   const safeKanji = getSafeKanji(currentKanji);
 
   return (
-    <Card className="flex flex-col">
+    <Card size="lg" className="flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold">Multiple Choice Quiz</h1>
@@ -417,7 +420,7 @@ const MultchoiceQuiz = () => {
                 key={idx}
                 disabled={isButtonDisabled}
                 onClick={() => handleAnswer(choice)}
-                className="rounded-xl bg-blue-600 hover:bg-blue-500 transition text-base font-semibold py-2 disabled:opacity-50"
+                className="rounded-md border border-zinc-800 bg-zinc-950 py-4 text-2xl font-bold text-zinc-100 transition hover:border-red-900/70 hover:bg-[#151512] disabled:opacity-50"
               >
                 {safeChoice.literal}
               </button>

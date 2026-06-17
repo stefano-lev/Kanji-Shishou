@@ -30,56 +30,83 @@ const HomePreferencesModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4"
       onClick={(e: MouseEvent<HTMLDivElement>) =>
         e.target === e.currentTarget && onClose()
       }
     >
-      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-6 text-center">Home Preferences</h2>
-
-        <div className="space-y-4 text-sm">
-          <Toggle
-            label="Show Overview Stats"
-            value={prefs.showOverviewStats}
-            onChange={() => toggle('showOverviewStats')}
-          />
-          <Toggle
-            label="Show Calendar"
-            value={prefs.showCalendar}
-            onChange={() => toggle('showCalendar')}
-          />
-          <Toggle
-            label="Show All-Time Stats"
-            value={prefs.showAllTimeStats}
-            onChange={() => toggle('showAllTimeStats')}
-          />
+      <div className="relative w-full max-w-md overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] p-6 text-zinc-100">
+        <div className="pointer-events-none absolute -right-4 -top-8 text-8xl font-black text-zinc-950">
+          設
         </div>
 
-        <button
-          onClick={handleSave}
-          className="mt-6 w-full rounded-lg bg-blue-600 hover:bg-blue-500 transition py-2"
-        >
-          Save
-        </button>
+        <div className="relative">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+            Display Settings
+          </p>
+
+          <h2 className="text-2xl font-bold">Home Preferences</h2>
+
+          <p className="mt-2 text-sm leading-6 text-zinc-500">
+            Choose which dashboard sections appear on the home screen.
+          </p>
+
+          <div className="mt-6 space-y-3 border-y border-zinc-800 py-5 text-sm">
+            <Toggle
+              label="Show Overview Stats"
+              value={prefs.showOverviewStats}
+              onChange={() => toggle('showOverviewStats')}
+            />
+            <Toggle
+              label="Show Calendar"
+              value={prefs.showCalendar}
+              onChange={() => toggle('showCalendar')}
+            />
+            <Toggle
+              label="Show All-Time Stats"
+              value={prefs.showAllTimeStats}
+              onChange={() => toggle('showAllTimeStats')}
+            />
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => onClose()}
+              className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 font-semibold text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-900"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={handleSave}
+              className="flex-1 rounded-md border border-red-800 bg-red-900 px-4 py-3 font-semibold text-red-50 transition hover:bg-red-800"
+            >
+              Save
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 const Toggle = ({ label, value, onChange }: ToggleProps) => (
-  <div className="flex justify-between items-center">
-    <span>{label}</span>
+  <div className="flex items-center justify-between gap-4 border-l-2 border-red-900 bg-zinc-950 px-4 py-3">
+    <span className="text-zinc-300">{label}</span>
+
     <button
       onClick={onChange}
-      className={`w-12 h-6 rounded-full transition ${
-        value ? 'bg-green-500' : 'bg-zinc-700'
-      }`}
+      className={[
+        'relative h-6 w-12 border transition',
+        value ? 'border-red-800 bg-red-950/70' : 'border-zinc-800 bg-[#0b0b0a]',
+      ].join(' ')}
+      aria-pressed={value}
     >
       <div
-        className={`h-6 w-6 bg-white rounded-full transform transition ${
-          value ? 'translate-x-6' : ''
-        }`}
+        className={[
+          'absolute top-1/2 h-4 w-4 -translate-y-1/2 bg-zinc-200 transition',
+          value ? 'left-6' : 'left-1',
+        ].join(' ')}
       />
     </button>
   </div>

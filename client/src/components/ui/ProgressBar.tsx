@@ -4,12 +4,12 @@ interface ProgressBarProps {
 }
 
 const ProgressBar = ({ value, max }: ProgressBarProps) => {
-  const percent = (value / max) * 100;
+  const percent = max > 0 ? Math.min(100, (value / max) * 100) : 0;
 
   return (
-    <div className="w-full max-w-sm bg-zinc-800 h-2 rounded mx-auto">
+    <div className="mx-auto h-2 w-full max-w-sm overflow-hidden rounded-none bg-zinc-900">
       <div
-        className="bg-indigo-500 h-2 rounded transition-all duration-300"
+        className="h-2 bg-red-900 transition-all duration-300"
         style={{ width: `${percent}%` }}
       />
     </div>

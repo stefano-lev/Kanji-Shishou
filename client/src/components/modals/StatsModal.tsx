@@ -36,11 +36,13 @@ const StatsModal = ({
 }: StatsModalProps) => {
   const stats = loadStats() || {};
   const srsData = loadSRS();
+
   const [statsMode, setStatsMode] = useState<StatsMode>(initialMode);
   const [prefs, setPrefs] = useState(loadStatsPreferences());
   const [showPrefsModal, setShowPrefsModal] = useState(false);
   const [showSnapshots, setShowSnapshots] = useState(false);
   const [showCloudBackup, setShowCloudBackup] = useState(false);
+
   const entries = Object.entries(stats);
 
   const handleExport = () => {
@@ -168,210 +170,245 @@ const StatsModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
       onClick={(e: MouseEvent<HTMLDivElement>) =>
         e.target === e.currentTarget && onClose()
       }
     >
-      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
-        <div className="relative flex items-center justify-end mb-6">
-          <h2 className="absolute left-1/2 -translate-x-1/2 text-white text-2xl font-bold">
-            {statsMode === 'srs'
-              ? 'SRS Review Statistics'
-              : 'All Study Statistics'}
-          </h2>
+      <div className="relative flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] text-zinc-100">
+        <div className="relative border-b border-zinc-800 p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+                Study Ledger
+              </p>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowCloudBackup(true)}
-              title="Cloud Backup"
-              className="text-zinc-400 hover:text-blue-400 transition text-lg"
-            >
-              ☁️
-            </button>
+              <h2 className="text-2xl font-bold">
+                {statsMode === 'srs'
+                  ? 'SRS Review Statistics'
+                  : 'All Study Statistics'}
+              </h2>
 
-            <button
-              onClick={handleExport}
-              title="Export Backup"
-              className="text-zinc-400 hover:text-blue-400 transition text-lg"
-            >
-              ⬇️
-            </button>
+              <p className="mt-2 text-sm text-zinc-500">
+                Review your kanji history, export local data, or sync progress
+                through cloud backup.
+              </p>
+            </div>
 
-            <label
-              title="Import Backup"
-              className="text-zinc-400 hover:text-green-400 transition text-lg cursor-pointer"
-            >
-              ⬆️
-              <input
-                type="file"
-                accept="application/json"
-                onChange={handleImport}
-                className="hidden"
-              />
-            </label>
+            <div className="flex flex-wrap gap-2">
+              <ToolbarButton
+                label="Cloud Backup"
+                onClick={() => setShowCloudBackup(true)}
+              >
+                ☁
+              </ToolbarButton>
 
-            <button
-              onClick={() => setShowSnapshots(true)}
-              title="View Snapshots"
-              className="text-zinc-400 hover:text-purple-400 transition text-lg"
-            >
-              🗂️
-            </button>
+              <ToolbarButton label="Export Backup" onClick={handleExport}>
+                ↓
+              </ToolbarButton>
 
-            <button
-              onClick={() => setShowPrefsModal(true)}
-              title="Preferences"
-              className="text-zinc-400 hover:text-white transition text-lg"
-            >
-              ⚙️
-            </button>
+              <label
+                title="Import Backup"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 text-lg font-semibold text-zinc-400 transition hover:border-red-900/70 hover:text-red-200"
+              >
+                ↑
+                <input
+                  type="file"
+                  accept="application/json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+
+              <ToolbarButton
+                label="View Snapshots"
+                onClick={() => setShowSnapshots(true)}
+              >
+                ▣
+              </ToolbarButton>
+
+              <ToolbarButton
+                label="Preferences"
+                onClick={() => setShowPrefsModal(true)}
+              >
+                ⚙
+              </ToolbarButton>
+            </div>
           </div>
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6 text-center">
-          <StatBox label="Total Reviews" value={totalSeen} />
-          <StatBox label="Accuracy" value={`${overallAccuracy}%`} />
-          <StatBox label="Kanji Studied" value={studiedCount} />
-          <StatBox label="Study Time" value={formatStudyTime(totalStudyTime)} />
-        </div>
+        <div className="relative flex-1 overflow-y-auto p-6">
+          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <StatBox label="Total Reviews" value={totalSeen} />
+            <StatBox label="Accuracy" value={`${overallAccuracy}%`} />
+            <StatBox label="Kanji Studied" value={studiedCount} />
+            <StatBox
+              label="Study Time"
+              value={formatStudyTime(totalStudyTime)}
+            />
+          </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as StatsSort)}
-            className="bg-zinc-800 border border-white/10 rounded px-3 py-2 text-white"
-          >
-            <option value="low-accuracy">Lowest Accuracy</option>
-            <option value="high-accuracy">Highest Accuracy</option>
-            <option value="seen">Most Seen</option>
-            <option value="uid">UID</option>
-          </select>
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as StatsSort)}
+              className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-200 outline-none transition focus:border-red-900"
+            >
+              <option value="low-accuracy">Lowest Accuracy</option>
+              <option value="high-accuracy">Highest Accuracy</option>
+              <option value="seen">Most Seen</option>
+              <option value="uid">UID</option>
+            </select>
 
-          <select
-            value={statsMode}
-            onChange={(e) => setStatsMode(e.target.value as StatsMode)}
-            className="bg-zinc-800 border border-white/10 rounded px-3 py-2 text-white"
-          >
-            <option value="global">All Study</option>
-            <option value="srs">SRS Only</option>
-          </select>
+            <select
+              value={statsMode}
+              onChange={(e) => setStatsMode(e.target.value as StatsMode)}
+              className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-200 outline-none transition focus:border-red-900"
+            >
+              <option value="global">All Study</option>
+              <option value="srs">SRS Only</option>
+            </select>
 
-          <select
-            value={filterLevel}
-            onChange={(e) => setFilterLevel(e.target.value as StatsLevelFilter)}
-            className="bg-zinc-800 border border-white/10 rounded px-3 py-2 text-white"
-          >
-            <option value="all">All Levels</option>
-            <option value="5">JLPT N5</option>
-            <option value="4">JLPT N4</option>
-            <option value="3">JLPT N3</option>
-            <option value="2">JLPT N2</option>
-            <option value="1">JLPT N1</option>
-          </select>
-        </div>
+            <select
+              value={filterLevel}
+              onChange={(e) =>
+                setFilterLevel(e.target.value as StatsLevelFilter)
+              }
+              className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-200 outline-none transition focus:border-red-900"
+            >
+              <option value="all">All Levels</option>
+              <option value="5">JLPT N5</option>
+              <option value="4">JLPT N4</option>
+              <option value="3">JLPT N3</option>
+              <option value="2">JLPT N2</option>
+              <option value="1">JLPT N1</option>
+            </select>
+          </div>
 
-        {/* Stats List */}
-        {filteredEntries.length === 0 ? (
-          <p className="text-center text-zinc-400 mt-6">No data found.</p>
-        ) : (
-          <div className="space-y-2">
-            {filteredEntries.map(([uid, data]) => {
-              const source = getSource(data);
+          {filteredEntries.length === 0 ? (
+            <div className="border-l-2 border-red-900 bg-zinc-950 p-5 text-sm text-zinc-500">
+              No data found.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredEntries.map(([uid, data]) => {
+                const source = getSource(data);
 
-              const accuracy =
-                source.correct + source.incorrect > 0
-                  ? Math.round(
-                      (source.correct / (source.correct + source.incorrect)) *
-                        100
-                    )
-                  : 0;
+                const accuracy =
+                  source.correct + source.incorrect > 0
+                    ? Math.round(
+                        (source.correct / (source.correct + source.incorrect)) *
+                          100
+                      )
+                    : 0;
 
-              return (
-                <div
-                  key={uid}
-                  className="relative grid grid-cols-[70px_1fr_160px] items-center bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm overflow-hidden hover:bg-white/10 hover:scale-[1.01] transition"
-                >
-                  <div className="text-3xl font-bold text-white">
-                    {kanjiByUid[uid]?.literal ?? '？'}
-                  </div>
+                const accuracyClass =
+                  accuracy >= 85
+                    ? 'text-emerald-300'
+                    : accuracy >= 60
+                      ? 'text-amber-300'
+                      : 'text-red-300';
 
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl font-bold text-white/5">
-                    {uid}
-                  </div>
+                return (
+                  <div
+                    key={uid}
+                    className="relative overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 transition hover:border-red-900/70 hover:bg-[#151512]"
+                  >
+                    {/* <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-6xl font-black text-zinc-900/70">
+                      {uid}
+                    </div> */}
 
-                  <div className="text-right text-zinc-400 tabular-nums">
-                    <div>Seen: {source.seen}</div>
-                    <div
-                      className={
-                        accuracy >= 85
-                          ? 'text-green-400'
-                          : accuracy >= 60
-                            ? 'text-yellow-400'
-                            : 'text-red-400'
-                      }
-                    >
-                      Accuracy: {accuracy}%
-                    </div>
-                    {statsMode === 'srs' && srsData[uid] && (
-                      <div className="text-xs text-zinc-500 mt-1 flex flex-col items-end gap-1">
-                        <div className="flex items-center gap-2">
-                          {prefs.showPhase && (
-                            <span
-                              className={`px-2 py-[2px] rounded text-[10px] font-semibold uppercase tracking-wide
-                              ${
-                                srsData[uid].phase === 'learning'
-                                  ? 'bg-yellow-400/20 text-yellow-300'
-                                  : 'bg-red-400/20 text-red-300'
-                              }
-                            `}
-                            >
-                              {srsData[uid].phase}
-                            </span>
-                          )}
-                          {prefs.showInterval && (
-                            <>
-                              {srsData[uid].phase === 'learning'
-                                ? `Step ${srsData[uid].step + 1}`
-                                : `Interval ${srsData[uid].interval}d`}
-                            </>
-                          )}
+                    <div className="relative grid grid-cols-[64px_1fr_auto] items-center gap-4">
+                      <div className="text-4xl font-bold text-zinc-100">
+                        {kanjiByUid[uid]?.literal ?? '？'}
+                      </div>
 
-                          {prefs.showEaseFactor && (
-                            <> • EF {srsData[uid].easeFactor.toFixed(2)}</>
-                          )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                          Kanji UID
+                        </p>
 
-                          {prefs.showRepetitions && (
-                            <> • Rep {srsData[uid].repetitions}</>
-                          )}
-                        </div>
+                        <p className="font-mono text-sm text-zinc-400">
+                          N{uid}
+                        </p>
 
-                        {prefs.showNextReview && (
-                          <div>
-                            Next{' '}
-                            {new Date(
-                              srsData[uid].nextReview
-                            ).toLocaleDateString()}
+                        {statsMode === 'srs' && srsData[uid] && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                            {prefs.showPhase && (
+                              <span
+                                className={[
+                                  'rounded border px-2 py-0.5 font-semibold uppercase tracking-wide',
+                                  srsData[uid].phase === 'learning'
+                                    ? 'border-amber-900 bg-amber-950/40 text-amber-200'
+                                    : 'border-red-900 bg-red-950/40 text-red-200',
+                                ].join(' ')}
+                              >
+                                {srsData[uid].phase}
+                              </span>
+                            )}
+
+                            {prefs.showInterval && (
+                              <span>
+                                {srsData[uid].phase === 'learning'
+                                  ? `Step ${srsData[uid].step + 1}`
+                                  : `Interval ${srsData[uid].interval}d`}
+                              </span>
+                            )}
+
+                            {prefs.showEaseFactor && (
+                              <span>
+                                EF {srsData[uid].easeFactor.toFixed(2)}
+                              </span>
+                            )}
+
+                            {prefs.showRepetitions && (
+                              <span>Rep {srsData[uid].repetitions}</span>
+                            )}
+
+                            {prefs.showNextReview && (
+                              <span>
+                                Next{' '}
+                                {new Date(
+                                  srsData[uid].nextReview
+                                ).toLocaleDateString()}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-lg bg-red-600 hover:bg-red-500 transition py-2"
-        >
-          Close
-        </button>
+                      <div className="text-right tabular-nums">
+                        <div className="text-sm text-zinc-500">
+                          Seen:{' '}
+                          <span className="font-semibold text-zinc-200">
+                            {source.seen}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`text-sm font-semibold ${accuracyClass}`}
+                        >
+                          {accuracy}% accuracy
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="relative border-t border-zinc-800 bg-zinc-950 p-4">
+          <button
+            onClick={onClose}
+            className="w-full rounded-md border border-red-800 bg-red-900 px-4 py-3 font-semibold text-red-50 transition hover:bg-red-800"
+          >
+            Close
+          </button>
+        </div>
       </div>
+
       {showPrefsModal && (
         <StatsPreferencesModal
           currentPrefs={prefs}
@@ -393,15 +430,34 @@ const StatsModal = ({
   );
 };
 
+interface ToolbarButtonProps {
+  label: string;
+  children: ReactNode;
+  onClick: () => void;
+}
+
+const ToolbarButton = ({ label, children, onClick }: ToolbarButtonProps) => (
+  <button
+    onClick={onClick}
+    title={label}
+    className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 text-lg font-semibold text-zinc-400 transition hover:border-red-900/70 hover:text-red-200"
+  >
+    {children}
+  </button>
+);
+
 interface StatBoxProps {
   label: string;
   value: ReactNode;
 }
 
 const StatBox = ({ label, value }: StatBoxProps) => (
-  <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-    <div className="text-zinc-400 text-sm">{label}</div>
-    <div className="text-white text-2xl font-bold">{value}</div>
+  <div className="border-l-2 border-red-900 bg-zinc-950 p-4">
+    <div className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
+      {label}
+    </div>
+
+    <div className="mt-2 text-2xl font-bold text-zinc-100">{value}</div>
   </div>
 );
 

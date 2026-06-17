@@ -21,28 +21,47 @@ const QuizConfig = ({
   onStart,
 }: QuizConfigProps) => {
   return (
-    <Card className="max-w-md space-y-6">
-      <h1 className="text-2xl font-bold">{title}</h1>
-
-      <div className="text-left">
-        <p className="mb-2 font-semibold">Select JLPT Levels:</p>
-
-        {(['5', '4', '3', '2', '1'] as JLPTLevel[]).map((level) => (
-          <label key={level} className="block mb-1">
-            <input
-              type="checkbox"
-              checked={selectedLevels.includes(level)}
-              onChange={() => toggleLevel(level)}
-              className="mr-2"
-            />
-            JLPT N{level}
-          </label>
-        ))}
+    <Card size="sm" className="space-y-6">
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+          Session Setup
+        </p>
+        <h1 className="text-2xl font-bold text-zinc-100">{title}</h1>
       </div>
 
-      {children}
+      <div className="border-t border-zinc-800 pt-5 text-left">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Select JLPT Levels
+        </p>
 
-      <Button variant="primary" onClick={onStart}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {(['5', '4', '3', '2', '1'] as JLPTLevel[]).map((level) => {
+            const active = selectedLevels.includes(level);
+
+            return (
+              <button
+                key={level}
+                type="button"
+                onClick={() => toggleLevel(level)}
+                className={[
+                  'rounded-md border px-3 py-3 text-sm font-semibold transition',
+                  active
+                    ? 'border-red-800 bg-red-950/60 text-red-100'
+                    : 'border-zinc-800 bg-zinc-950 text-zinc-500 hover:border-zinc-700 hover:text-zinc-200',
+                ].join(' ')}
+              >
+                N{level}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-4 border-t border-zinc-800 pt-5 text-zinc-300">
+        {children}
+      </div>
+
+      <Button variant="primary" onClick={onStart} className="w-full">
         Start Quiz
       </Button>
     </Card>

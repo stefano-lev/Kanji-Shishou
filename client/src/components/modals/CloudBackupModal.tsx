@@ -127,86 +127,120 @@ const CloudBackupModal = ({ onClose }: CloudBackupModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-zinc-900 p-6 text-white">
-        <h2 className="mb-4 text-2xl font-bold">Cloud Backup</h2>
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] text-zinc-100">
+        <div className="pointer-events-none absolute -right-5 -top-10 text-9xl font-black text-zinc-950">
+          雲
+        </div>
 
-        <p className="mb-4 text-sm text-zinc-400">
-          Create a cloud backup of your local Kanji Shishou progress, or restore
-          an existing backup using its Backup ID and Passkey.
-        </p>
+        <div className="relative border-b border-zinc-800 p-6">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+            Cloud Sync
+          </p>
 
-        {credentials && (
-          <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-4 text-sm">
-            <div className="text-zinc-400">Saved Backup ID</div>
-            <div className="break-all font-mono text-blue-300">
-              {credentials.backupId}
+          <h2 className="text-2xl font-bold">Cloud Backup</h2>
+
+          <p className="mt-2 text-sm leading-6 text-zinc-500">
+            Create a cloud copy of your local Kanji Shishou progress, update an
+            existing save, or restore using a Backup ID and Passkey.
+          </p>
+        </div>
+
+        <div className="relative space-y-5 p-6">
+          {credentials && (
+            <div className="border-l-2 border-red-900 bg-zinc-950 p-4 text-sm">
+              <CredentialRow
+                label="Saved Backup ID"
+                value={credentials.backupId}
+              />
+              <CredentialRow
+                label="Saved Passkey"
+                value={credentials.passkey}
+              />
+
+              {credentials.updatedAt && (
+                <div className="mt-3 text-xs text-zinc-600">
+                  Last updated:{' '}
+                  {new Date(credentials.updatedAt).toLocaleString()}
+                </div>
+              )}
             </div>
+          )}
 
-            <div className="mt-3 text-zinc-400">Saved Passkey</div>
-            <div className="break-all font-mono text-green-300">
-              {credentials.passkey}
+          {!credentials && (
+            <div className="border-l-2 border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-500">
+              No cloud backup credentials are saved in this browser yet.
+            </div>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              disabled={isWorking}
+              onClick={handleCreateBackup}
+              className="rounded-md border border-red-800 bg-red-900 px-4 py-3 font-semibold text-red-50 transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Create New Backup
+            </button>
+
+            <button
+              disabled={isWorking || !credentials}
+              onClick={handleUpdateBackup}
+              className="rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 font-semibold text-zinc-300 transition hover:border-red-900/70 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Update Saved Backup
+            </button>
+          </div>
+
+          <div className="border-t border-zinc-800 pt-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+              Restore Existing Backup
+            </p>
+
+            <div className="space-y-3">
+              <input
+                value={backupIdInput}
+                onChange={(e) => setBackupIdInput(e.target.value)}
+                placeholder="Backup ID"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 font-mono text-sm text-zinc-200 outline-none transition placeholder:text-zinc-700 focus:border-red-900"
+              />
+
+              <input
+                value={passkeyInput}
+                onChange={(e) => setPasskeyInput(e.target.value)}
+                placeholder="Passkey"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-4 py-3 font-mono text-sm text-zinc-200 outline-none transition placeholder:text-zinc-700 focus:border-red-900"
+              />
+
+              <button
+                disabled={isWorking}
+                onClick={handleRestoreBackup}
+                className="w-full rounded-md border border-emerald-900 bg-emerald-950 px-4 py-3 font-semibold text-emerald-200 transition hover:border-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Restore Backup
+              </button>
             </div>
           </div>
-        )}
 
-        <div className="mb-4 flex flex-col gap-3">
-          <button
-            disabled={isWorking}
-            onClick={handleCreateBackup}
-            className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-500 disabled:opacity-50"
-          >
-            Create New Cloud Backup
-          </button>
-
-          <button
-            disabled={isWorking || !credentials}
-            onClick={handleUpdateBackup}
-            className="rounded-lg bg-purple-600 px-4 py-2 hover:bg-purple-500 disabled:opacity-50"
-          >
-            Update Saved Cloud Backup
-          </button>
+          {message && (
+            <div className="border-l-2 border-red-900 bg-zinc-950 p-4 text-sm text-zinc-300">
+              {message}
+            </div>
+          )}
         </div>
 
-        <div className="mb-4 space-y-3">
-          <input
-            value={backupIdInput}
-            onChange={(e) => setBackupIdInput(e.target.value)}
-            placeholder="Backup ID"
-            className="w-full rounded-lg border border-white/10 bg-zinc-800 px-3 py-2"
-          />
-
-          <input
-            value={passkeyInput}
-            onChange={(e) => setPasskeyInput(e.target.value)}
-            placeholder="Passkey"
-            className="w-full rounded-lg border border-white/10 bg-zinc-800 px-3 py-2"
-          />
-
-          <button
-            disabled={isWorking}
-            onClick={handleRestoreBackup}
-            className="w-full rounded-lg bg-green-600 px-4 py-2 hover:bg-green-500 disabled:opacity-50"
-          >
-            Restore Cloud Backup
-          </button>
-        </div>
-
-        {message && <p className="mb-4 text-sm text-zinc-300">{message}</p>}
-
-        <div className="flex gap-3">
+        <div className="relative flex flex-col gap-3 border-t border-zinc-800 bg-zinc-950 p-4 sm:flex-row">
           <button
             onClick={handleForgetCredentials}
-            className="flex-1 rounded-lg bg-zinc-700 px-4 py-2 hover:bg-zinc-600"
+            className="flex-1 rounded-md border border-zinc-800 bg-[#0b0b0a] px-4 py-3 font-semibold text-zinc-400 transition hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-200"
           >
             Forget Saved Credentials
           </button>
 
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 hover:bg-red-500"
+            className="flex-1 rounded-md border border-red-800 bg-red-900 px-4 py-3 font-semibold text-red-50 transition hover:bg-red-800"
           >
             Close
           </button>
@@ -215,5 +249,20 @@ const CloudBackupModal = ({ onClose }: CloudBackupModalProps) => {
     </div>
   );
 };
+
+interface CredentialRowProps {
+  label: string;
+  value: string;
+}
+
+const CredentialRow = ({ label, value }: CredentialRowProps) => (
+  <div className="mb-3 last:mb-0">
+    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+      {label}
+    </div>
+
+    <div className="break-all font-mono text-sm text-zinc-200">{value}</div>
+  </div>
+);
 
 export default CloudBackupModal;

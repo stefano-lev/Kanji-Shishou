@@ -1,14 +1,36 @@
 import type { ReactNode } from 'react';
 
+type CardSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
 interface CardProps {
   children: ReactNode;
   className?: string;
+  size?: CardSize;
+  padded?: boolean;
 }
 
-export default function Card({ children, className = '' }: CardProps) {
+const sizeClasses: Record<CardSize, string> = {
+  sm: 'max-w-xl',
+  md: 'max-w-3xl',
+  lg: 'max-w-5xl',
+  xl: 'max-w-7xl',
+  full: 'max-w-none',
+};
+
+export default function Card({
+  children,
+  className = '',
+  size = 'md',
+  padded = true,
+}: CardProps) {
   return (
     <div
-      className={`w-full max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-4 ${className}`}
+      className={`
+        mx-auto w-full ${sizeClasses[size]}
+        rounded-xl border border-zinc-800 bg-[#11110f]
+        ${padded ? 'p-4 sm:p-6' : ''}
+        ${className}
+      `}
     >
       {children}
     </div>

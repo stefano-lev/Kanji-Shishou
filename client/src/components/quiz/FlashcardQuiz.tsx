@@ -93,7 +93,8 @@ const FlashcardQuiz = () => {
     const saved = loadSession('flashcard');
     if (saved) {
       const restoredLevels: JLPTLevel[] =
-        saved.selectedLevels ?? (saved.selectedLevel ? [saved.selectedLevel] : ['5']);
+        saved.selectedLevels ??
+        (saved.selectedLevel ? [saved.selectedLevel] : ['5']);
       const fullData = getKanjiByLevels(restoredLevels);
 
       let reconstructedDeck = fullData;
@@ -278,7 +279,7 @@ const FlashcardQuiz = () => {
   const safeKanji = getSafeKanji(currentKanji);
 
   return (
-    <Card className="space-y-2">
+    <Card size="lg" className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-bold">Kanji Flashcard Quiz</h1>
@@ -314,8 +315,11 @@ const FlashcardQuiz = () => {
 
       {safeKanji && (
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-full max-w-md mx-auto bg-zinc-900/70 border border-white/10 rounded-2xl py-12 flex items-center justify-center shadow-inner">
-            <span className="text-7xl sm:text-8xl font-bold tracking-wide">
+          <div className="relative mx-auto flex w-full max-w-md items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 py-12">
+            <div className="pointer-events-none absolute right-4 top-2 text-4xl font-black text-zinc-900">
+              字
+            </div>
+            <span className="relative text-7xl font-bold tracking-wide text-zinc-100 sm:text-8xl">
               {safeKanji.literal}
             </span>
           </div>

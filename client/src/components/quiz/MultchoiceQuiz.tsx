@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import type { ReactNode } from 'react';
 
 import useQuizDeckConfig from '@hooks/useQuizDeckConfig';
 
@@ -13,7 +14,6 @@ import {
 import { getSafeKanji } from '@utils/kanjiUtils';
 
 import Card from '@components/ui/Card';
-import InfoBlock from '@components/ui/InfoBlock';
 import Button from '@components/ui/Button';
 
 import QuizConfig from '@components/quiz/QuizConfig';
@@ -357,91 +357,163 @@ const MultchoiceQuiz = () => {
   const safeKanji = getSafeKanji(currentKanji);
 
   return (
-    <Card size="lg" className="flex flex-col gap-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-bold">Multiple Choice Quiz</h1>
+    <Card
+      size="xl"
+      padded={false}
+      className="overflow-hidden lg:h-[calc(100dvh-7.5rem)]"
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="shrink-0 border-b border-zinc-800 bg-zinc-950/60 p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+                Recognition Drill
+              </p>
 
-        <Button
-          variant="danger"
-          onClick={() => {
-            clearSession('multichoice');
-            setQuizStarted(false);
-          }}
-        >
-          End
-        </Button>
-      </div>
+              <h1 className="text-xl font-bold text-zinc-100 sm:text-2xl">
+                Multiple Choice Quiz
+              </h1>
+            </div>
 
-      <div className="text-sm font-semibold text-zinc-400 mb-2">
-        <p>
-          Correct: {correctCount} | Incorrect: {incorrectCount} | Total:{' '}
-          {kanjiData.length}
-        </p>
-        <p>Accuracy: {percentageCorrect}%</p>
-      </div>
-
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-center mb-2">
-          Round {currentRound + 1}
-        </h2>
-
-        <div className="w-full max-w-md mx-auto space-y-3">
-          <div className="grid grid-cols-2 gap-4 items-stretch">
-            <InfoBlock title="Kun-yomi">
-              {safeKanji.reading_meaning.rmgroup.reading
-                .filter((r) => r['@r_type'] === 'ja_kun')
-                .map((r) => r['#text'])
-                .join(', ') || 'None'}
-            </InfoBlock>
-
-            <InfoBlock title="On-yomi">
-              {safeKanji.reading_meaning.rmgroup.reading
-                .filter((r) => r['@r_type'] === 'ja_on')
-                .map((r) => r['#text'])
-                .join(', ') || 'None'}
-            </InfoBlock>
-          </div>
-
-          <InfoBlock title="Meanings">
-            {safeKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
-          </InfoBlock>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex-shrink-0 pt-2">
-        <div className="grid grid-cols-4 gap-3 max-w-xl mx-auto">
-          {choices.map((choice, idx) => {
-            const safeChoice = getSafeKanji(choice);
-
-            return (
-              <button
-                key={idx}
-                disabled={isButtonDisabled}
-                onClick={() => handleAnswer(choice)}
-                className="rounded-md border border-zinc-800 bg-zinc-950 py-4 text-2xl font-bold text-zinc-100 transition hover:border-red-900/70 hover:bg-[#151512] disabled:opacity-50"
-              >
-                {safeChoice.literal}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="min-h-[2rem] flex items-center justify-center mt-4">
-          {isCorrect !== null && (
-            <p
-              className={`text-lg font-bold ${
-                isCorrect ? 'text-green-400' : 'text-red-400'
-              }`}
+            <Button
+              variant="danger"
+              className="py-2"
+              onClick={() => {
+                clearSession('multichoice');
+                setQuizStarted(false);
+              }}
             >
-              {isCorrect ? 'Correct!' : 'Incorrect!'}
-            </p>
-          )}
+              End
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 lg:p-4">
+          <section className="grid shrink-0 gap-2 sm:grid-cols-4">
+            <QuizMetric label="Round" value={currentRound + 1} />
+            <QuizMetric label="Correct" value={correctCount} />
+            <QuizMetric label="Incorrect" value={incorrectCount} />
+            <QuizMetric label="Accuracy" value={`${percentageCorrect}%`} />
+          </section>
+
+          <section className="shrink-0 rounded-lg border border-zinc-800 bg-[#0b0b0a] p-3">
+            <div className="mb-3 flex flex-col gap-2 border-b border-zinc-800 pb-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+                  Identify the Kanji
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-2 lg:grid-cols-2">
+              <QuizHintBlock title="Kun-yomi">
+                {safeKanji.reading_meaning.rmgroup.reading
+                  .filter((r) => r['@r_type'] === 'ja_kun')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
+              </QuizHintBlock>
+
+              <QuizHintBlock title="On-yomi">
+                {safeKanji.reading_meaning.rmgroup.reading
+                  .filter((r) => r['@r_type'] === 'ja_on')
+                  .map((r) => r['#text'])
+                  .join(', ') || 'None'}
+              </QuizHintBlock>
+
+              <QuizHintBlock title="Meanings" className="lg:col-span-2">
+                {safeKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                  'None'}
+              </QuizHintBlock>
+            </div>
+          </section>
+
+          <section className="flex min-h-0 flex-1 flex-col">
+            <div className="mb-3 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-zinc-300">
+                  Answer Choices
+                </p>
+
+                <p className="text-xs text-zinc-600">
+                  Total cards in queue: {kanjiData.length}
+                </p>
+              </div>
+
+              <div className="min-h-6 text-sm font-semibold">
+                {isCorrect !== null ? (
+                  <span
+                    className={isCorrect ? 'text-emerald-300' : 'text-red-300'}
+                  >
+                    {isCorrect ? 'Correct!' : 'Incorrect!'}
+                  </span>
+                ) : (
+                  <span className="text-zinc-600">
+                    Round {currentRound + 1} of {kanjiData.length}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
+              {choices.map((choice, idx) => {
+                const safeChoice = getSafeKanji(choice);
+
+                return (
+                  <button
+                    key={idx}
+                    disabled={isButtonDisabled}
+                    onClick={() => handleAnswer(choice)}
+                    className="relative flex min-h-20 items-center justify-center overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 text-4xl font-bold text-zinc-100 transition hover:border-red-900/70 hover:bg-[#151512] disabled:opacity-50 sm:min-h-24 sm:text-5xl lg:min-h-0 lg:text-6xl"
+                  >
+                    <span className="relative">{safeChoice.literal}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         </div>
       </div>
     </Card>
   );
 };
+
+interface QuizMetricProps {
+  label: string;
+  value: string | number;
+}
+
+const QuizMetric = ({ label, value }: QuizMetricProps) => (
+  <div className="border-l-2 border-red-900 bg-zinc-950 px-3 py-2">
+    <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-600 sm:text-xs">
+      {label}
+    </p>
+
+    <p className="mt-1 text-xl font-bold text-zinc-100 sm:text-2xl">{value}</p>
+  </div>
+);
+
+interface QuizHintBlockProps {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}
+
+const QuizHintBlock = ({
+  title,
+  children,
+  className = '',
+}: QuizHintBlockProps) => (
+  <div
+    className={`flex min-h-20 flex-col border-l-2 border-red-900 bg-zinc-950 px-4 py-3 ${className}`}
+  >
+    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-600 sm:text-xs">
+      {title}
+    </p>
+
+    <div className="flex flex-1 items-center text-sm leading-6 text-zinc-200 sm:text-base">
+      {children}
+    </div>
+  </div>
+);
 
 export default MultchoiceQuiz;

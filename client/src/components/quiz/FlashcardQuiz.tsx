@@ -260,31 +260,36 @@ const FlashcardQuiz = () => {
 
   if (quizFinished) {
     return (
-      <Card className="max-w-md space-y-6 text-center">
-        <QuizSummary
-          title="Flashcard Session Complete"
-          total={kanjiData.length}
-          correct={null}
-          incorrect={null}
-          time={sessionTime}
-          onRestart={() => {
-            setQuizStarted(false);
-            setQuizFinished(false);
-          }}
-        />
-      </Card>
+      <QuizSummary
+        title="Flashcard Session Complete"
+        total={kanjiData.length}
+        correct={null}
+        incorrect={null}
+        time={sessionTime}
+        onRestart={() => {
+          setQuizStarted(false);
+          setQuizFinished(false);
+        }}
+      />
     );
   }
 
   const safeKanji = getSafeKanji(currentKanji);
 
   return (
-    <Card size="lg" className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-bold">Kanji Flashcard Quiz</h1>
+    <Card size="xl" className="overflow-hidden p-0">
+      <div className="border-b border-zinc-800 bg-zinc-950/60 p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+              Flashcard Session
+            </p>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-2xl font-bold text-zinc-100">
+              Kanji Flashcard Quiz
+            </h1>
+          </div>
+
           <div className="flex gap-3">
             <Button
               variant="danger"
@@ -302,50 +307,62 @@ const FlashcardQuiz = () => {
         </div>
       </div>
 
-      <div className="text-center flex flex-col items-center space-y-2">
-        <p className="text-lg font-bold text-center">
-          Card {currentKanjiIndex + 1} / {kanjiData.length}
-        </p>
-
-        <ProgressBar
-          value={currentKanjiIndex + 1}
-          max={kanjiData.length}
-        ></ProgressBar>
-      </div>
-
-      {safeKanji && (
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="relative mx-auto flex w-full max-w-md items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 py-12">
-            <div className="pointer-events-none absolute right-4 top-2 text-4xl font-black text-zinc-900">
-              字
+      <div className="grid gap-6 p-5 lg:grid-cols-[1.05fr_0.95fr] lg:p-6">
+        <section className="flex min-h-[420px] flex-col">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-zinc-400">
+                Card {currentKanjiIndex + 1} / {kanjiData.length}
+              </p>
             </div>
-            <span className="relative text-7xl font-bold tracking-wide text-zinc-100 sm:text-8xl">
-              {safeKanji.literal}
-            </span>
+
+            <div className="w-full max-w-xs">
+              <ProgressBar
+                value={currentKanjiIndex + 1}
+                max={kanjiData.length}
+              />
+            </div>
           </div>
 
-          <div className="w-full max-w-md mx-auto space-y-3">
-            <div className="grid grid-cols-2 gap-4 items-stretch">
-              <InfoBlock title="Kun-yomi">
-                {safeKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r['@r_type'] === 'ja_kun')
-                  .map((r) => r['#text'])
-                  .join(', ') || 'None'}
-              </InfoBlock>
-              <InfoBlock title="On-yomi">
-                {safeKanji.reading_meaning.rmgroup.reading
-                  .filter((r) => r['@r_type'] === 'ja_on')
-                  .map((r) => r['#text'])
-                  .join(', ') || 'None'}
-              </InfoBlock>
+          {safeKanji && (
+            <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
+              <span className="relative text-[8rem] font-bold leading-none tracking-wide text-zinc-100 sm:text-[10rem] lg:text-[12rem]">
+                {safeKanji.literal}
+              </span>
+            </div>
+          )}
+        </section>
+
+        {safeKanji && (
+          <aside className="flex flex-col gap-4">
+            <div className="rounded-lg border border-zinc-800 bg-[#0b0b0a] p-5">
+              <p className="mb-4 border-b border-zinc-800 pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                Reading Reference
+              </p>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <InfoBlock title="Kun-yomi" height="min-h-28">
+                  {safeKanji.reading_meaning.rmgroup.reading
+                    .filter((r) => r['@r_type'] === 'ja_kun')
+                    .map((r) => r['#text'])
+                    .join(', ') || 'None'}
+                </InfoBlock>
+
+                <InfoBlock title="On-yomi" height="min-h-28">
+                  {safeKanji.reading_meaning.rmgroup.reading
+                    .filter((r) => r['@r_type'] === 'ja_on')
+                    .map((r) => r['#text'])
+                    .join(', ') || 'None'}
+                </InfoBlock>
+              </div>
             </div>
 
-            <InfoBlock title="Meanings">
+            <InfoBlock title="Meanings" height="min-h-32">
               {safeKanji.reading_meaning.rmgroup.meaning?.join(', ') || 'None'}
             </InfoBlock>
-          </div>
-        </div>
-      )}
+          </aside>
+        )}
+      </div>
     </Card>
   );
 };

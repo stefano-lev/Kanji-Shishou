@@ -478,9 +478,6 @@ const SRSReview = () => {
           </div>
 
           <div className="relative mx-auto flex w-full max-w-md items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 py-6 animate-fade-in">
-            <div className="pointer-events-none absolute right-4 top-2 text-7xl font-black text-zinc-900">
-              復
-            </div>
             <span className="relative text-[4rem] font-bold tracking-wide text-zinc-100 sm:text-[5rem] md:text-[6rem]">
               {currentKanji.literal}
             </span>

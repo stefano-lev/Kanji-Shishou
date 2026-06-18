@@ -348,7 +348,7 @@ const SRSReview = () => {
     {
       value: 5,
       label: 'Easy',
-      variant: 'primary',
+      variant: 'success',
     },
   ] as const;
 
@@ -359,207 +359,257 @@ const SRSReview = () => {
 
   return (
     <Card
-      size={mode === MODES.REVIEW ? 'lg' : 'md'}
-      className="flex flex-col gap-5"
+      size={mode === MODES.ONBOARDING ? 'md' : 'xl'}
+      className="overflow-hidden p-0"
     >
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-bold ">SRS Review</h1>
+      <div className="border-b border-zinc-800 bg-zinc-950/60 p-5">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold ">SRS Review</h1>
 
-        {mode === MODES.REVIEW && currentKanji && (
-          <Button variant="danger" onClick={() => setMode(MODES.FINISHED)}>
-            End Session
-          </Button>
-        )}
-      </div>
-
-      {mode === MODES.ONBOARDING && (
-        <SRSOnboarding
-          onComplete={(newConfig) => {
-            setConfig(newConfig);
-            setMode(MODES.DASHBOARD);
-          }}
-        />
-      )}
-
-      {mode === MODES.DASHBOARD && (
-        <div className="space-y-3 text-center">
-          <h2 className="text-2xl font-semibold">Daily Review</h2>
-
-          <div className="grid grid-cols-3 gap-3">
-            <InfoBlock title="Reviews Due" height="h-20">
-              {dashboardStats?.dueCount ?? 0}
-            </InfoBlock>
-            <InfoBlock title="Learning" height="h-20">
-              {dashboardStats?.learningCount ?? 0}
-            </InfoBlock>
-            <InfoBlock title="New Cards Today" height="h-20">
-              {dashboardStats?.newCount ?? 0}
-            </InfoBlock>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <InfoBlock title="Studied Today" height="h-20">
-              {dashboardStats?.studiedToday ?? 0}
-            </InfoBlock>
-
-            <InfoBlock title="Total Cards" height="h-20">
-              {dashboardStats?.totalCards ?? 0}
-            </InfoBlock>
-          </div>
-
-          {(dashboardStats?.dueCount ?? 0) + (dashboardStats?.newCount ?? 0) ===
-          0 ? (
-            <div className="space-y-4">
-              <p className="text-zinc-400 font-bold underline">
-                You have completed all reviews for today.
-              </p>
-
-              {hasExtraStudy() && (
-                <Button variant="success" onClick={handleExtraStudy}>
-                  Study Extra Cards
-                </Button>
-              )}
-            </div>
-          ) : (
-            <Button variant="primary" onClick={startSession}>
-              Start Review (
-              {(dashboardStats?.dueCount ?? 0) +
-                (dashboardStats?.newCount ?? 0)}
-              )
+          {mode === MODES.REVIEW && currentKanji && (
+            <Button variant="danger" onClick={() => setMode(MODES.FINISHED)}>
+              End Session
             </Button>
           )}
+        </div>
+      </div>
 
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">JLPT Level Progress</h3>
+      <div className="p-5 lg:p-6">
+        {mode === MODES.ONBOARDING && (
+          <SRSOnboarding
+            onComplete={(newConfig) => {
+              setConfig(newConfig);
+              setMode(MODES.DASHBOARD);
+            }}
+          />
+        )}
 
-            <div className="text-sm text-zinc-400 border-t border-white/10 pt-3 space-y-1">
-              <div className="grid grid-cols-2 gap-3">
+        {mode === MODES.DASHBOARD && (
+          <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+            <section className="rounded-lg border border-zinc-800 bg-[#0b0b0a] p-5">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+                Daily Review
+              </p>
+
+              <h2 className="text-2xl font-bold text-zinc-100">
+                Today&apos;s Queue
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-zinc-500">
+                Review due cards, introduce new kanji, or continue studying
+                beyond today&apos;s configured limits.
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <SRSMetric
+                  label="Reviews Due"
+                  value={dashboardStats?.dueCount ?? 0}
+                />
+                <SRSMetric
+                  label="Learning"
+                  value={dashboardStats?.learningCount ?? 0}
+                />
+                <SRSMetric
+                  label="New Cards"
+                  value={dashboardStats?.newCount ?? 0}
+                />
+                <SRSMetric
+                  label="Studied Today"
+                  value={dashboardStats?.studiedToday ?? 0}
+                />
+                <SRSMetric
+                  label="Total SRS Cards"
+                  value={dashboardStats?.totalCards ?? 0}
+                  className="sm:col-span-2"
+                />
+              </div>
+
+              <div className="mt-6">
+                {(dashboardStats?.dueCount ?? 0) +
+                  (dashboardStats?.newCount ?? 0) ===
+                0 ? (
+                  <div className="space-y-4 border-l-2 border-red-900 bg-zinc-950 p-4">
+                    <p className="text-sm font-semibold text-zinc-300">
+                      You have completed all reviews for today.
+                    </p>
+
+                    {hasExtraStudy() && (
+                      <Button variant="success" onClick={handleExtraStudy}>
+                        Study Extra Cards
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={startSession}
+                    className="w-full"
+                  >
+                    Start Review (
+                    {(dashboardStats?.dueCount ?? 0) +
+                      (dashboardStats?.newCount ?? 0)}
+                    )
+                  </Button>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-zinc-800 bg-[#0b0b0a] p-5">
+              <div className="mb-5 border-b border-zinc-800 pb-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
+                  JLPT Progress
+                </p>
+
+                <h2 className="text-2xl font-bold text-zinc-100">
+                  Level Coverage
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-zinc-500">
+                  Click a level to open SRS-specific statistics for that group.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
                 {levelProgress.map((lvl, index) => (
                   <div
                     key={lvl.level}
                     onClick={() => setStatsLevelFilter(lvl.level)}
                     className={`cursor-pointer rounded-lg border border-zinc-800 bg-zinc-950 p-5 transition hover:border-red-900/70 hover:bg-[#151512] ${
-                      index === 4 ? 'col-span-2' : ''
+                      index === 4 ? 'sm:col-span-2' : ''
                     }`}
                   >
-                    <div className="flex justify-between text-sm font-semibold mb-1">
-                      <span>JLPT N{lvl.level}</span>
-                      <span>
+                    <div className="mb-2 flex justify-between text-sm font-semibold">
+                      <span className="text-zinc-200">JLPT N{lvl.level}</span>
+                      <span className="text-zinc-500">
                         {lvl.learned}/{lvl.total}
                       </span>
                     </div>
 
                     <ProgressBar value={lvl.learned} max={lvl.total} />
 
-                    <div className="text-xs text-zinc-400 mt-1">
+                    <div className="mt-2 text-xs text-zinc-500">
                       {lvl.percent}% learned
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           </div>
-        </div>
-      )}
-      {mode === MODES.REVIEW && currentKanji && (
-        <div
-          key={currentUid}
-          className="flex flex-col items-center text-center gap-2"
-        >
-          <div className="text-center flex flex-col items-center">
-            <p className="text-lg font-bold text-center">
-              Card {currentIndex + 1} / {sessionQueue.length}
-            </p>
+        )}
+        {mode === MODES.REVIEW && currentKanji && (
+          <div
+            key={currentUid}
+            className="grid gap-6 lg:grid-cols-[1fr_0.95fr]"
+          >
+            <section className="flex min-h-[420px] flex-col">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-400">
+                    Card {currentIndex + 1} / {sessionQueue.length}
+                  </p>
+                </div>
 
-            <ProgressBar
-              value={currentIndex + 1}
-              max={sessionQueue.length}
-            ></ProgressBar>
-          </div>
+                <div className="w-full max-w-xs">
+                  <ProgressBar
+                    value={currentIndex + 1}
+                    max={sessionQueue.length}
+                  />
+                </div>
+              </div>
 
-          <div className="relative mx-auto flex w-full max-w-md items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 py-6 animate-fade-in">
-            <span className="relative text-[4rem] font-bold tracking-wide text-zinc-100 sm:text-[5rem] md:text-[6rem]">
-              {currentKanji.literal}
-            </span>
-          </div>
+              <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 animate-fade-in">
+                <span className="relative text-[7rem] font-bold leading-none tracking-wide text-zinc-100 sm:text-[9rem] lg:text-[11rem]">
+                  {currentKanji.literal}
+                </span>
+              </div>
+            </section>
 
-          <div className="w-full max-w-md mx-auto flex flex-col gap-4">
-            <div
-              className={`space-y-4 w-full transition-opacity duration-200 ${revealed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <InfoBlock title="Kun-yomi" height="h-24">
-                  {currentKanji.reading_meaning.rmgroup.reading
-                    .filter((r) => r['@r_type'] === 'ja_kun')
-                    .map((r) => r['#text'])
-                    .join(', ') || 'None'}
-                </InfoBlock>
+            <section className="flex flex-col gap-4">
+              <div
+                className={`space-y-4 transition-opacity duration-200 ${
+                  revealed ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InfoBlock title="Kun-yomi" height="min-h-28">
+                    {currentKanji.reading_meaning.rmgroup.reading
+                      .filter((r) => r['@r_type'] === 'ja_kun')
+                      .map((r) => r['#text'])
+                      .join(', ') || 'None'}
+                  </InfoBlock>
 
-                <InfoBlock title="On-yomi" height="h-24">
-                  {currentKanji.reading_meaning.rmgroup.reading
-                    .filter((r) => r['@r_type'] === 'ja_on')
-                    .map((r) => r['#text'])
-                    .join(', ') || 'None'}
+                  <InfoBlock title="On-yomi" height="min-h-28">
+                    {currentKanji.reading_meaning.rmgroup.reading
+                      .filter((r) => r['@r_type'] === 'ja_on')
+                      .map((r) => r['#text'])
+                      .join(', ') || 'None'}
+                  </InfoBlock>
+                </div>
+
+                <InfoBlock title="Meanings" height="min-h-32">
+                  {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
+                    'None'}
                 </InfoBlock>
               </div>
 
-              <InfoBlock title="Meanings" height="h-24">
-                {currentKanji.reading_meaning.rmgroup.meaning?.join(', ') ||
-                  'None'}
-              </InfoBlock>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 min-h-[72px]">
-              {!revealed ? (
-                <Button
-                  variant="primary"
-                  className="col-span-2 sm:col-span-4 py-5 rounded-xl shadow-lg font-semibold"
-                  onClick={() => setRevealed(true)}
-                >
-                  Reveal Answer
-                </Button>
-              ) : (
-                answerOptions.map((option) => (
+              <div className="mt-auto rounded-lg border border-zinc-800 bg-[#0b0b0a] p-4">
+                {!revealed ? (
                   <Button
-                    key={option.value}
-                    variant={option.variant}
-                    className="rounded-xl shadow-lg py-3"
-                    onClick={() => handleAnswer(option.value)}
+                    variant="primary"
+                    className="w-full py-5 text-base font-semibold"
+                    onClick={() => setRevealed(true)}
                   >
-                    <div className="font-semibold">{option.label}</div>
-                    <div className="text-xs opacity-70 mt-1">
-                      {previewInterval(option.value)}
-                    </div>
+                    Reveal Answer
                   </Button>
-                ))
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {answerOptions.map((option) => (
+                      <Button
+                        key={option.value}
+                        variant={option.variant}
+                        className="py-4"
+                        onClick={() => handleAnswer(option.value)}
+                      >
+                        <div className="font-semibold">{option.label}</div>
+                        <div className="mt-1 text-xs opacity-70">
+                          {previewInterval(option.value)}
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+        {mode === MODES.FINISHED && (
+          <div className="mx-auto max-w-2xl rounded-lg border border-zinc-800 bg-zinc-950 p-10 text-center space-y-4">
+            <h2 className="text-2xl font-semibold">Session Complete</h2>
+
+            <p className="text-zinc-400">
+              You reviewed{' '}
+              {dailyProgressState.newStudied +
+                dailyProgressState.reviewsStudied}{' '}
+              cards today.
+            </p>
+
+            <div className="items-center justify-center flex flex-col gap-3">
+              <Button
+                variant="primary"
+                onClick={() => setMode(MODES.DASHBOARD)}
+              >
+                Back to Dashboard
+              </Button>
+
+              {hasExtraStudy() && (
+                <Button variant="success" onClick={handleExtraStudy}>
+                  Continue Studying Anyway
+                </Button>
               )}
             </div>
           </div>
-        </div>
-      )}
-      {mode === MODES.FINISHED && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-10 text-center space-y-4">
-          <h2 className="text-2xl font-semibold">Session Complete</h2>
-
-          <p className="text-zinc-400">
-            You reviewed{' '}
-            {dailyProgressState.newStudied + dailyProgressState.reviewsStudied}{' '}
-            cards today.
-          </p>
-
-          <div className="items-center justify-center flex flex-col gap-3">
-            <Button variant="primary" onClick={() => setMode(MODES.DASHBOARD)}>
-              Back to Dashboard
-            </Button>
-
-            {hasExtraStudy() && (
-              <Button variant="success" onClick={handleExtraStudy}>
-                Continue Studying Anyway
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {statsLevelFilter && (
         <StatsModal
@@ -571,5 +621,21 @@ const SRSReview = () => {
     </Card>
   );
 };
+
+interface SRSMetricProps {
+  label: string;
+  value: string | number;
+  className?: string;
+}
+
+const SRSMetric = ({ label, value, className = '' }: SRSMetricProps) => (
+  <div className={`border-l-2 border-red-900 bg-zinc-950 p-4 ${className}`}>
+    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
+      {label}
+    </p>
+
+    <p className="mt-1 text-2xl font-bold text-zinc-100">{value}</p>
+  </div>
+);
 
 export default SRSReview;

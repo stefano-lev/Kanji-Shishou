@@ -18,49 +18,49 @@ User progress is saved locally in the browser by default, with cloud backup supp
 
 ---
 
-## Features
+# Features
 
-### Flashcard Quiz
+## Flashcard Quiz
 
 A simple flashcard-style review mode for kanji exposure and reading practice.
 
 Users can configure sessions by JLPT level, randomize card order, limit deck size, or filter cards based on existing accuracy data.
 
-### Multiple Choice Quiz
+## Multiple Choice Quiz
 
 A recognition-based quiz mode where users identify the kanji that matches a set of readings and meanings.
 
 The quiz tracks correct and incorrect answers, updates study statistics, records daily activity, and optionally repeats missed cards later in the session.
 
-### SRS Review (Beta)
+## SRS Review (Beta)
 
 A spaced repetition review system for building long-term kanji retention.
 
 The SRS system tracks learning and review cards, daily review limits, new cards per day, review intervals, ease factor, repetitions, and next review dates.
 
-### Kanji Dictionary
+## Kanji Dictionary
 
 A searchable kanji dictionary built from KANJIDIC data.
 
 Users can browse and filter kanji by JLPT level, search by kanji/readings/meanings, sort by study statistics, stroke count, frequency, JLPT level, and more.
 
-### Stroke Order Viewer
+## Stroke Order Viewer
 
 Kanji stroke order diagrams are powered by KanjiVG SVG data.
 
 The viewer supports playback animation, stroke number toggling, autoplay, and speed adjustment.
 
-### Statistics and Progress Tracking
+## Statistics and Progress Tracking
 
 Kanji Shishou tracks both general study stats and SRS-specific stats.
 
-### Local Backups and Snapshots
+## Local Backups and Snapshots
 
 Users can export and import their progress as JSON backup files.
 
 The app also creates periodic local snapshots, allowing users to restore previous local states if needed.
 
-### Optional Cloud Backup
+## Optional Cloud Backup
 
 Kanji Shishou includes a small Express/SQLite backend for optional cloud backups.
 
@@ -128,16 +128,12 @@ _Statistics, preferences, backup tools, snapshots, and cloud backup access._
 
 Kanji Shishou is actively evolving, but the core study tools are functional:
 
-- Dashboard
 - Flashcard quiz
 - Multiple choice quiz
 - Kanji dictionary
 - Stroke order viewer
 - SRS review
 - Statistics tracking
-- Local backups
-- Demo mode
-- Cloud backup
 
 Planned or possible future improvements include:
 

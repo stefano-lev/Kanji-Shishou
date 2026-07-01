@@ -386,7 +386,7 @@ const SRSReview = () => {
 
         {mode === MODES.DASHBOARD && (
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-            <section className="rounded-lg border border-zinc-800 bg-[#0b0b0a] p-5">
+            <section className="flex min-h-[300px] flex-col sm:min-h-[360px] lg:min-h-[420px]">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
                 Daily Review
               </p>

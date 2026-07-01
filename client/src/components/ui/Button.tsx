@@ -15,7 +15,7 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const base =
-    'rounded-md border px-4 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50';
+    'rounded-md border px-3 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3 sm:text-base';
 
   const variants: Record<ButtonVariant, string> = {
     primary:

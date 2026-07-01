@@ -170,13 +170,13 @@ const StatsModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-2 sm:p-4"
       onClick={(e: MouseEvent<HTMLDivElement>) =>
         e.target === e.currentTarget && onClose()
       }
     >
-      <div className="relative flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-zinc-800 bg-[#11110f] text-zinc-100">
-        <div className="relative border-b border-zinc-800 p-6">
+      <div className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-zinc-800 bg-[#11110f] text-zinc-100 sm:max-h-[85vh] sm:rounded-xl">
+        <div className="relative border-b border-zinc-800 p-4 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-red-400/70">
@@ -237,8 +237,8 @@ const StatsModal = ({
           </div>
         </div>
 
-        <div className="relative flex-1 overflow-y-auto p-6">
-          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="relative flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="mb-5 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-4">
             <StatBox label="Total Reviews" value={totalSeen} />
             <StatBox label="Accuracy" value={`${overallAccuracy}%`} />
             <StatBox label="Kanji Studied" value={studiedCount} />
@@ -318,7 +318,7 @@ const StatsModal = ({
                       {uid}
                     </div> */}
 
-                    <div className="relative grid grid-cols-[64px_1fr_auto] items-center gap-4">
+                    <div className="relative grid grid-cols-[48px_1fr] gap-3 sm:grid-cols-[64px_1fr_auto] sm:items-center sm:gap-4">
                       <div className="text-4xl font-bold text-zinc-100">
                         {kanjiByUid[uid]?.literal ?? '？'}
                       </div>
@@ -377,7 +377,7 @@ const StatsModal = ({
                         )}
                       </div>
 
-                      <div className="text-right tabular-nums">
+                      <div className="col-span-2 border-t border-zinc-800 pt-3 text-left tabular-nums sm:col-span-1 sm:border-t-0 sm:pt-0 sm:text-right">
                         <div className="text-sm text-zinc-500">
                           Seen:{' '}
                           <span className="font-semibold text-zinc-200">

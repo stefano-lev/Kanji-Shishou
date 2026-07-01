@@ -463,7 +463,7 @@ const MultchoiceQuiz = () => {
                     key={idx}
                     disabled={isButtonDisabled}
                     onClick={() => handleAnswer(choice)}
-                    className="relative flex min-h-20 items-center justify-center overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 text-4xl font-bold text-zinc-100 transition hover:border-red-900/70 hover:bg-[#151512] disabled:opacity-50 sm:min-h-24 sm:text-5xl lg:min-h-0 lg:text-6xl"
+                    className="relative flex min-h-16 items-center justify-center overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 text-3xl font-bold text-zinc-100 transition hover:border-red-900/70 hover:bg-[#151512] disabled:opacity-50 sm:min-h-24 sm:text-5xl lg:min-h-0 lg:text-6xl"
                   >
                     <span className="relative">{safeChoice.literal}</span>
                   </button>

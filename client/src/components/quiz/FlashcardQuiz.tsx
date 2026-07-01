@@ -308,7 +308,7 @@ const FlashcardQuiz = () => {
       </div>
 
       <div className="grid gap-6 p-5 lg:grid-cols-[1.05fr_0.95fr] lg:p-6">
-        <section className="flex min-h-[420px] flex-col">
+        <section className="flex min-h-[300px] flex-col sm:min-h-[360px] lg:min-h-[420px]">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-zinc-400">

@@ -28,7 +28,7 @@ export default function Card({
       className={`
         mx-auto w-full ${sizeClasses[size]}
         rounded-xl border border-zinc-800 bg-[#11110f]
-        ${padded ? 'p-4 sm:p-6' : ''}
+        ${padded ? 'p-3 sm:p-5 lg:p-6' : ''}
         ${className}
       `}
     >

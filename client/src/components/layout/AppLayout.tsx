@@ -7,7 +7,7 @@ export default function AppLayout() {
     <div className="min-h-screen bg-[#090908] text-zinc-100">
       <NavBar />
 
-      <main className="px-4 pb-12 pt-24 sm:px-6 lg:px-8">
+      <main className="px-3 pb-10 pt-20 sm:px-5 lg:px-8 lg:pt-24">
         <div className="mx-auto w-full max-w-[1440px]">
           <Outlet />
         </div>
